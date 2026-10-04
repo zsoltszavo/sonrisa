@@ -99,3 +99,7 @@ $ pnpm test:e2e (DATABASE_URL=…/sonrisa_s6)
 - **S7:** reuse `PageHeader`, `PageWidth`, `States`, `SeverityBadge`, `ConfirmDialog`, the query-key pattern and `mockApi`/`renderAt` (`src/test/render.tsx`). Add an "Admin" nav item only for `role === 'admin'` (UX only). `GET /events/recent` exists, but the explorer needs filters (source, time) and a detail endpoint with revisions + Notifications.
 - **S8:** a Webhook provider needs `.meta({ title, description })` on its config fields for a good form; nothing else on the frontend (the form refuses non-string properties, so keep config fields as strings).
 - **Next steps:** route-level code splitting; an httpOnly cookie session instead of localStorage; pagination for My notifications beyond 100.
+
+## CI
+
+Commit `c29dbc3`: GitHub Actions run [37221924138](https://github.com/zsoltszavo/sonrisa/actions/runs/37221924138), job "typecheck · lint · test · build": **success**.

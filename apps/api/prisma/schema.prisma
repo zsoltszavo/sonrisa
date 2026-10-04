@@ -1,4 +1,6 @@
-// Domain models arrive in S3. Until then this only wires the client to Postgres.
+// Glossary terms (CONTEXT.md) are used for every model and field name.
+// Severity is an Int 1–5: Prisma has no CHECK constraints, so it is validated with the
+// shared `severitySchema` on the way in (request bodies, adapters) and on the way out.
 
 generator client {
   provider = "prisma-client"
@@ -7,4 +9,170 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum Category {
+  earthquake
+  disaster
+  news
+  market
+}
+
+enum EventSourceKey {
+  usgs
+  gdacs
+  simulated
+}
+
+enum NotificationKind {
+  match
+  escalation
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+}
+
+model User {
+  id            String               @id @default(uuid(7))
+  /// Stored lower-cased and trimmed, so login is case-insensitive.
+  email         String               @unique
+  passwordHash  String
+  role          Role                 @default(user)
+  createdAt     DateTime             @default(now())
+  destinations  ChannelDestination[]
+  rules         AlertRule[]
+  notifications Notification[]
+}
+
+/// A specific address on a Channel, owned by a User (D8, D11).
+model ChannelDestination {
+  id            String                 @id @default(uuid(7))
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Channel provider key (`email`, `slack`, ...): a string, not an enum, so a new provider needs no migration (D11).
+  channel       String
+  label         String
+  /// Validated by the Channel provider's own config schema.
+  config        Json
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  rules         AlertRuleDestination[]
+  notifications Notification[]
+
+  @@index([userId])
+}
+
+model AlertRule {
+  id           String                 @id @default(uuid(7))
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category
+  minSeverity  Int
+  keywords     String[]
+  /// Every destination must belong to `userId`: checked by the API on create and update (CR15).
+  destinations AlertRuleDestination[]
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@index([userId])
+  @@index([category, minSeverity])
+}
+
+/// Which Channel Destinations an Alert Rule notifies. Explicit (not an implicit m:n) so the
+/// destination side can be RESTRICT: the database, not a check-then-delete, stops a destination
+/// in use from being deleted, so a rule can never lose its last destination (review CR21).
+model AlertRuleDestination {
+  ruleId        String
+  rule          AlertRule          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  destinationId String
+  destination   ChannelDestination @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+  createdAt     DateTime           @default(now())
+
+  @@id([ruleId, destinationId])
+  @@index([destinationId])
+}
+
+model EventSource {
+  id             String         @id @default(uuid(7))
+  key            EventSourceKey @unique
+  name           String
+  enabled        Boolean        @default(true)
+  /// Polling interval; null for sources that are never polled (the Simulated Source).
+  intervalSec    Int?
+  /// Freshness Window: older Events are stored but never notify (D15).
+  freshnessHours Int            @default(6)
+  lastPollAt     DateTime?
+  lastError      String?
+  events         Event[]
+}
+
+model Event {
+  id            String          @id @default(uuid(7))
+  sourceId      String
+  source        EventSource     @relation(fields: [sourceId], references: [id])
+  externalId    String
+  category      Category
+  severity      Int
+  title         String
+  summary       String
+  location      String
+  url           String?
+  occurredAt    DateTime
+  /// Hash of the content we compare to detect an Event Update (D15: GDACS `datemodified` is unreliable).
+  contentHash   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  revisions     EventRevision[]
+  notifications Notification[]
+
+  @@unique([sourceId, externalId])
+  @@index([occurredAt])
+}
+
+/// Severity history of an Event (ADR 0001): one row per stored version whose Severity changed.
+model EventRevision {
+  id               String   @id @default(uuid(7))
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  previousSeverity Int?
+  severity         Int
+  contentHash      String
+  recordedAt       DateTime @default(now())
+
+  @@index([eventId, recordedAt])
+}
+
+/// One delivery to one recipient (User, Channel Destination) about one Event (D6, D18(c)).
+model Notification {
+  id            String              @id @default(uuid(7))
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId       String
+  event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// Null once the destination is deleted: the delivery history stays for the admin log.
+  destinationId String?
+  destination   ChannelDestination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  kind          NotificationKind
+  /// The Severity this Notification reported. Escalation compares with the highest one per recipient (D18(d)).
+  severity      Int
+  /// Every Alert Rule of the user that matched (CONTEXT.md: Notification).
+  ruleIds       String[]
+  status        NotificationStatus  @default(pending)
+  attempts      Int                 @default(0)
+  lastError     String?
+  createdAt     DateTime            @default(now())
+  sentAt        DateTime?
+
+  /// Dedup key, see D19: one Notification per recipient per Event per reported Severity.
+  @@unique([userId, eventId, destinationId, severity])
+  @@index([eventId])
+  @@index([status, createdAt])
 }

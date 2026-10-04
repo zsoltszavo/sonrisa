@@ -30,6 +30,8 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://sonrisa:sonrisa@localhost:5432/sonrisa
+      # Throwaway key for the CI database only; real deployments supply their own.
+      JWT_SECRET: ci-only-jwt-secret-not-used-anywhere-else-0123456789
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6 # version comes from "packageManager" in package.json
@@ -43,5 +45,6 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm test
+      - run: pnpm db:migrate
       - run: pnpm test:e2e
       - run: pnpm build

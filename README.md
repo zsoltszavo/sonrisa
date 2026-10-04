@@ -22,14 +22,36 @@ Requires Node 24.15+ (`.nvmrc`), pnpm via Corepack (`corepack enable pnpm`) and 
 
 ```sh
 cp .env.example .env          # one .env at the repo root serves every app
+echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
 docker compose up -d --wait   # Postgres (host port 5433) + Mailpit
 pnpm install                  # also generates the Prisma client
+pnpm db:migrate               # apply Prisma migrations
+pnpm db:seed                  # demo users, destinations, rules and Event Sources (safe to re-run)
 pnpm dev                      # web on http://localhost:5173, API on http://localhost:3000
 ```
+
+Demo accounts (seeded):
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@demo.test` | `sonrisa-admin-demo` | admin |
+| `alice@demo.test` | `sonrisa-alice-demo` | user (has an email + `sonrisa · #world-alerts` destination and sample rules) |
 
 - `http://localhost:5173` shows the API and database status (the web dev server proxies `/api` to the API).
 - `http://localhost:3000/api/health` returns `200 {"status":"ok","database":"up"}`, or `503` when Postgres is unreachable.
 - Mailpit UI: `http://localhost:8025`.
+
+**API** (all under `/api`; every route needs `Authorization: Bearer <token>` unless marked public):
+
+| Route | What it does |
+|---|---|
+| `POST /auth/register`, `POST /auth/login` (public) | Returns `{ accessToken, user }`. Self-registration always creates a `user` |
+| `GET /me` | The signed-in user |
+| `GET/POST /destinations`, `GET/PUT/DELETE /destinations/:id` | The user's own Channel Destinations (config validated per Channel) |
+| `GET/POST /rules`, `GET/PUT/DELETE /rules/:id` | The user's own Alert Rules; every destination must be the user's own |
+| `GET /admin/event-sources` | Admin only (403 for users) |
+
+Another user's rule or destination answers `404`, the same as one that doesn't exist.
 
 | Workspace | What it is |
 |---|---|

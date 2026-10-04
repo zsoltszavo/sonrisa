@@ -51,7 +51,12 @@ export const alertRuleInputSchema = z.object({
   category: categorySchema,
   minSeverity: severitySchema,
   keywords: keywordsSchema,
-  destinationIds: z.array(z.string().min(1)).min(1),
+  destinationIds: z
+    .array(z.string().min(1))
+    .min(1)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: 'Destinations must be unique',
+    }),
 });
 
 export const alertRuleSchema = alertRuleInputSchema.extend({
@@ -76,3 +81,11 @@ export const channelDestinationBaseSchema = z.object({
   config: z.unknown(),
 });
 export type ChannelDestinationBase = z.infer<typeof channelDestinationBaseSchema>;
+
+/** What a user submits when creating or editing a Channel Destination. */
+export const channelDestinationInputSchema = channelDestinationBaseSchema.pick({
+  channel: true,
+  label: true,
+  config: true,
+});
+export type ChannelDestinationInput = z.infer<typeof channelDestinationInputSchema>;

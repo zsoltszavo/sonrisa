@@ -26,3 +26,8 @@ Things we considered and chose to leave out of the first version. Each one links
 ## Event data (added after the feed check)
 - **A real news source with a defensible severity signal.** Plain RSS has none; v1 covers news through the Simulated Source. (D15)
 - **Matching the same real-world event across sources** (e.g. USGS + GDACS earthquakes) instead of one authoritative source per Category. (D15)
+
+## Auth hardening (added in S3)
+- **Rate limiting on `/auth/login` and `/auth/register`** (e.g. `@nestjs/throttler`). v1 has none. (D19(g))
+- **Non-revealing registration** (always 202 + an email) so account existence can't be probed; it needs email verification, which D9 cut. (D19(g))
+- **Refresh tokens / revocation list.** v1 tokens live 12 h; a deleted or demoted user is still cut off immediately because the guard re-reads the User. (D19(d))

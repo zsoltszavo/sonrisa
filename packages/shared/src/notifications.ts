@@ -1,7 +1,10 @@
 import type { AlertRule, Severity } from './event.js';
 import { eventMatcher, type MatchableEvent } from './matching.js';
 
-/** A (User, Channel Destination) pair: at most one Notification of each kind per pair and Event (D18). */
+/**
+ * A (User, Channel Destination) pair (D18(c)). A pair can get one match and then several
+ * Escalations for the same Event, each at a higher Severity, so the dedup key is (pair, Event, Severity) (D19(a)).
+ */
 export interface Recipient {
   userId: string;
   destinationId: string;

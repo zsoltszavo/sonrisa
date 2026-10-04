@@ -19,6 +19,7 @@ describe('alertRuleInputSchema', () => {
     ['a fractional Severity', { minSeverity: 2.5 }],
     ['an unknown Category', { category: 'weather' }],
     ['no destinations', { destinationIds: [] }],
+    ['the same destination twice', { destinationIds: ['d1', 'd1'] }],
     ['a blank Keyword', { keywords: ['   '] }],
     ['a Keyword with no letters or digits', { keywords: ['!!!'] }],
     ['Keywords equal after normalising', { keywords: ['São Paulo', 'sao  paulo'] }],

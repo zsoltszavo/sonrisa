@@ -13,4 +13,7 @@ Start session S9 (End-to-end, hardening, submission) of /Users/zsolt.szavo/Code/
 
 ## Outcome
 
-_(filled in at the end of the session)_
+- Playwright browser test of the core loop in a new `e2e/` workspace (`84e0ae3`). It runs in CI, and a mutation makes it fail. Screenshots are in `docs/evidence/s09/`.
+- `/code-review` on that commit: CR79–CR91. A separate full-repo review: CR92–CR99. Its main finding (the Freshness Window swallowing GDACS upgrades) became D25, with an e2e test.
+- README rewritten (what was built, `pnpm demo`, a demo script with the Stand-in and Webhook receiver env lines, how to read the process, known limitations). The demo was checked on a brand-new database.
+- Retro: `docs/sessions/S09-submission.md`.

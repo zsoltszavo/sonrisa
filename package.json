@@ -18,7 +18,9 @@
     "test:browser": "pnpm --filter @sonrisa/e2e test:browser",
     "generate": "pnpm -r generate",
     "db:migrate": "pnpm --filter @sonrisa/api db:deploy",
-    "db:seed": "pnpm --filter @sonrisa/api db:seed"
+    "db:seed": "pnpm --filter @sonrisa/api db:seed",
+    "demo": "docker compose up -d --wait && pnpm db:migrate && pnpm db:seed && pnpm dev",
+    "webhook-receiver": "node apps/api/test/webhook-receiver.ts 4012"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

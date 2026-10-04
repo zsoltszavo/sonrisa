@@ -65,6 +65,8 @@ gates exit=0
 
 (e2e run against a freshly migrated database, `DATABASE_URL=…/sonrisa_s3check`.)
 
+CI on GitHub: ✅ green on the first push of `320af5f` (incl. `db:migrate` + e2e against the Postgres service), https://github.com/zsoltszavo/sonrisa/actions/runs/37215528335
+
 ## Notes for later sessions
 
 - **Local dev DB:** if it was migrated during S3 before the migration was folded, run `pnpm --filter @sonrisa/api exec prisma migrate reset --force` once (re-applies migrations and seeds). `.env` now needs `JWT_SECRET` (see README).

@@ -12,6 +12,7 @@ import {
 } from '@sonrisa/shared';
 import { Roles } from '../auth/decorators.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { DeliveryService } from '../delivery/delivery.service.js';
 import { SimulatedEventsService } from '../ingestion/simulated-events.service.js';
 import { AdminService } from './admin.service.js';
 
@@ -27,6 +28,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly simulated: SimulatedEventsService,
+    private readonly delivery: DeliveryService,
   ) {}
 
   @Get('event-sources')
@@ -59,5 +61,12 @@ export class AdminController {
     @Body(simulatedEventPipe) input: SimulatedEventInput,
   ): Promise<StoredEvent> {
     return this.simulated.update(id, input);
+  }
+
+  /** Queues a `failed` Notification again with a fresh set of attempts; 409 for any other status. */
+  @Post('notifications/:id/retry')
+  @HttpCode(202)
+  retryNotification(@Param('id') id: string): Promise<{ id: string; status: 'pending' }> {
+    return this.delivery.retry(id);
   }
 }

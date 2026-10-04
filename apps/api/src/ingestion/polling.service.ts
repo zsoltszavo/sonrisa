@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { EventSourceKey, PollResult } from '@sonrisa/shared';
 import type { Env } from '../config/env.js';
+import { errorMessage } from '../common/error-message.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { dedupeByExternalId } from './adapter.js';
 import { AdapterRegistry } from './adapter-registry.js';
@@ -31,10 +32,6 @@ export function isDue(source: PollSchedule, now: Date): boolean {
   if (!source.enabled || source.intervalSec === null) return false;
   if (source.lastPollAt === null) return true;
   return now.getTime() - source.lastPollAt.getTime() >= source.intervalSec * 1000;
-}
-
-function describe(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
 }
 
 /**
@@ -87,7 +84,7 @@ export class PollingService implements OnApplicationBootstrap, OnModuleDestroy {
       // Not awaited: a slow GDACS poll must not hold up the next USGS tick.
       this.poll(key).catch((error: unknown) => {
         // Only reachable if recording the outcome itself failed (e.g. the database is down).
-        this.logger.error(`Poll of ${key} could not be recorded: ${describe(error)}`);
+        this.logger.error(`Poll of ${key} could not be recorded: ${errorMessage(error)}`);
       });
     }
     return due.map((source) => source.key);
@@ -109,7 +106,7 @@ export class PollingService implements OnApplicationBootstrap, OnModuleDestroy {
       this.tick()
         .catch((error: unknown) => {
           // The loop must survive a database outage; the next tick tries again.
-          this.logger.error(`Scheduler tick failed: ${describe(error)}`);
+          this.logger.error(`Scheduler tick failed: ${errorMessage(error)}`);
         })
         .finally(() => {
           if (!this.shutdown.signal.aborted) this.scheduleTick();
@@ -155,13 +152,13 @@ export class PollingService implements OnApplicationBootstrap, OnModuleDestroy {
         ...summary.failed.map((item) => `failed ${item.externalId}: ${item.reason}`),
       ];
       if (done < events.length) {
-        result.error = `Stopped after ${String(done)} of ${String(events.length)} Events: ${describe(signal.reason)}`;
+        result.error = `Stopped after ${String(done)} of ${String(events.length)} Events: ${errorMessage(signal.reason)}`;
       } else if (problems.length > 0) {
         result.error = `${String(problems.length)} item(s) not stored; first: ${problems[0] ?? ''}`;
       }
     } catch (error) {
       // The whole poll failed (network, HTTP status, feed shape): recorded, not thrown.
-      result.error = describe(error);
+      result.error = errorMessage(error);
     }
 
     // Cut short by shutdown: not the source's fault, so nothing is recorded (and the database

@@ -2,7 +2,13 @@ import { alertRuleSchema, channelDestinationBaseSchema } from '@sonrisa/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PrismaService } from '../src/prisma/prisma.service.js';
-import { createTestApp, registerUser, type TestApp, type TestUser } from './support.js';
+import {
+  createTestApp,
+  registerUser,
+  STANDIN_URL,
+  type TestApp,
+  type TestUser,
+} from './support.js';
 
 /**
  * IDOR suite (plan S3 "done when"): user B must not be able to read or change anything of
@@ -63,7 +69,11 @@ describe('Channel Destinations', () => {
     const updated = await api()
       .put(`/api/destinations/${created.id}`)
       .set('Authorization', alice.auth)
-      .send({ channel: 'slack', label: 'Team', config: { webhookUrl: 'http://localhost:4010/x' } })
+      .send({
+        channel: 'slack',
+        label: 'Team',
+        config: { webhookUrl: `${STANDIN_URL}/hooks/team` },
+      })
       .expect(200);
     expect(updated.body).toMatchObject({ channel: 'slack', label: 'Team' });
     await api()

@@ -1,6 +1,11 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import type { ChannelDestinationBase, ChannelDestinationInput } from '@sonrisa/shared';
-import { parseChannelConfig } from '../channels/channel-configs.js';
+import type {
+  ChannelDestinationBase,
+  ChannelDestinationInput,
+  TestDeliveryResult,
+} from '@sonrisa/shared';
+import { DeliveryError } from '../channels/channel-provider.js';
+import { ChannelRegistry } from '../channels/channel-registry.js';
 import { isPrismaError } from '../common/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -18,7 +23,10 @@ const destinationFields = {
  */
 @Injectable()
 export class DestinationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly channels: ChannelRegistry,
+  ) {}
 
   list(userId: string): Promise<ChannelDestinationBase[]> {
     return this.prisma.channelDestination.findMany({
@@ -38,7 +46,7 @@ export class DestinationsService {
   }
 
   create(userId: string, input: ChannelDestinationInput): Promise<ChannelDestinationBase> {
-    const config = parseChannelConfig(input.channel, input.config);
+    const config = this.channels.parseConfig(input.channel, input.config);
     return this.prisma.channelDestination.create({
       data: { userId, channel: input.channel, label: input.label, config },
       select: destinationFields,
@@ -50,7 +58,7 @@ export class DestinationsService {
     id: string,
     input: ChannelDestinationInput,
   ): Promise<ChannelDestinationBase> {
-    const config = parseChannelConfig(input.channel, input.config);
+    const config = this.channels.parseConfig(input.channel, input.config);
     try {
       return await this.prisma.channelDestination.update({
         where: { id, userId },
@@ -83,6 +91,26 @@ export class DestinationsService {
           ruleIds: links.map((link) => link.ruleId),
         });
       }
+      throw error;
+    }
+  }
+
+  /**
+   * Sends a test message right away (not through the queue) so the user sees the result at once.
+   * A Channel's refusal is a normal outcome here, reported in the body, not an HTTP error.
+   */
+  async sendTest(userId: string, id: string): Promise<TestDeliveryResult> {
+    const destination = await this.get(userId, id);
+    try {
+      await this.channels.send(
+        destination.channel,
+        destination.config,
+        { type: 'test', destinationLabel: destination.label },
+        AbortSignal.timeout(20_000),
+      );
+      return { delivered: true };
+    } catch (error) {
+      if (error instanceof DeliveryError) return { delivered: false, error: error.message };
       throw error;
     }
   }

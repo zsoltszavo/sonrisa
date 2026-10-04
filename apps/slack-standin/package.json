@@ -1,0 +1,17 @@
+{
+  "name": "@sonrisa/slack-standin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local stand-in for Slack Incoming Webhooks (D12): accepts webhook POSTs and shows the Block Kit it receives.",
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

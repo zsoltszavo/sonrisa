@@ -3,6 +3,7 @@ import {
   type ChannelDestinationBase,
   type ChannelDestinationInput,
   channelDestinationInputSchema,
+  type TestDeliveryResult,
   type User,
 } from '@sonrisa/shared';
 import { CurrentUser } from '../auth/decorators.js';
@@ -40,6 +41,12 @@ export class DestinationsController {
     @Body(inputPipe) input: ChannelDestinationInput,
   ): Promise<ChannelDestinationBase> {
     return this.destinations.update(user.id, id, input);
+  }
+
+  @Post(':id/test')
+  @HttpCode(200)
+  sendTest(@CurrentUser() user: User, @Param('id') id: string): Promise<TestDeliveryResult> {
+    return this.destinations.sendTest(user.id, id);
   }
 
   @Delete(':id')

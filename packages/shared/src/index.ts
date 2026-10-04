@@ -1,3 +1,4 @@
+export * from './delivery.js';
 export * from './event.js';
 export * from './event-source.js';
 export * from './freshness.js';

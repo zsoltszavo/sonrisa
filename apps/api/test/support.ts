@@ -10,6 +10,9 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
 
 export type TestApp = INestApplication<Server>;
 
+/** The Slack Stand-in origin the e2e API allows (vitest.config.e2e.ts); `delivery` starts one there. */
+export const STANDIN_URL = process.env.SLACK_STANDIN_URL ?? 'http://localhost:4011';
+
 /** `override` can swap providers, e.g. the FeedFetcher for the saved feed samples. */
 export async function createTestApp(
   override: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,

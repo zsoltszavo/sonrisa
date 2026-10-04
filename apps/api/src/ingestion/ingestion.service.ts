@@ -7,6 +7,7 @@ import {
 } from '@sonrisa/shared';
 import { isPrismaError } from '../common/prisma-errors.js';
 import type { Prisma } from '../generated/prisma/client.js';
+import { errorMessage } from '../common/error-message.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { contentHash } from './content-hash.js';
 import { EventIngestedBus } from './event-ingested.js';
@@ -97,7 +98,7 @@ export class IngestionService {
         // Collected, not swallowed: the poll reports the count and the first reason as lastError.
         summary.failed.push({
           externalId: event.externalId,
-          reason: error instanceof Error ? error.message : String(error),
+          reason: errorMessage(error),
         });
       }
     }

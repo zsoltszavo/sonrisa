@@ -2,7 +2,7 @@
 
 Users set up **Alert Rules** and get notified (Email, Slack, Webhook) when an important world **Event** happens: earthquakes, disasters, news, market moves. Admins manage the Event Sources, simulate Events and watch every delivery.
 
-> This repository is an interview task: *"take a vague brief from ambiguity to a working implementation using AI agents."* **The process is the main deliverable**; the code is the evidence. [How to read the process](#how-to-read-the-process) explains where to look.
+> This repository is an interview task: *"take a vague brief from ambiguity to a working implementation using AI agents."* **The process is the main deliverable**; the code is the evidence. [How to read the process](#how-to-read-the-process) explains where to look, and [`PROCESS.md`](PROCESS.md) maps every process artifact. A 1:45 video tour of the app (user, then admin) is in [`walkthrough.mp4`](walkthrough.mp4).
 
 ![alice's notifications after the demo flow](docs/evidence/s09/04-alice-notifications.png)
 
@@ -127,14 +127,16 @@ The work ran as one planning session and nine build sessions, each started fresh
 
 | Read | What it shows |
 |---|---|
+| [`PROCESS.md`](PROCESS.md) | One-page map of the whole process, with links |
+| [`walkthrough.mp4`](walkthrough.mp4) | Video tour: the app as a user, then as an admin |
 | [`docs/task-brief.txt`](docs/task-brief.txt) | The original, deliberately vague brief |
 | [`docs/sessions/S00-planning.md`](docs/sessions/S00-planning.md) | How the brief was grilled into decisions (Q1–Q9) before any code |
 | [`CONTEXT.md`](CONTEXT.md) | The domain glossary; code and UI use these words |
-| [`docs/decision-log.md`](docs/decision-log.md) | All 25 decisions, why, and what was rejected |
+| [`docs/decision-log.md`](docs/decision-log.md) | All 25 decisions, why, and what was rejected ([summary](docs/decision-log-summary.md)) |
 | [`docs/adr/`](docs/adr/) | The two decisions that are hard to reverse |
 | [`docs/plan.md`](docs/plan.md) | The session plan, the definition of done and the AI-shortcut checklist |
 | [`docs/sessions/`](docs/sessions/) | One retro per session: goal, what the AI got wrong, what changed, gate output |
-| [`docs/ai-review-log.md`](docs/ai-review-log.md) | Every place AI output was checked against reality (R-entries) or reviewed (CR-entries), with the verdict and reason |
+| [`docs/ai-review-log.md`](docs/ai-review-log.md) | Every place AI output was checked against reality (R-entries) or reviewed (CR-entries), with the verdict and reason ([summary](docs/ai-review-log-summary.md)) |
 | [`docs/prompts/`](docs/prompts/) | Every prompt, verbatim, with its outcome |
 | [`docs/evidence/`](docs/evidence/) | Feed samples and screenshots from each reality check |
 

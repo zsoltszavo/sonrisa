@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "walkthrough": "playwright test -c walkthrough.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

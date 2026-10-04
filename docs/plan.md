@@ -39,7 +39,9 @@ Each session starts fresh (`/clear`) and reads: `CONTEXT.md`, `docs/plan.md` (it
 
 Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live feeds checked, first commit `d3d9aac`.
 
-## S1 — Scaffold & infrastructure
+## S1 — Scaffold & infrastructure ✅ (done)
+
+Done in `0c00658` · [retro](sessions/S01-scaffold.md); gates and CI green.
 
 **Goal:** an empty but fully wired monorepo where every gate runs.
 - pnpm workspace: `apps/web` (Vite + React + TS + Tailwind + shadcn/ui + React Router + TanStack Query), `apps/api` (NestJS), `packages/shared` (TS lib, zod).
@@ -53,7 +55,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** made-up or outdated versions/flags of scaffolding CLIs; Tailwind v3 vs v4 config mix-ups; shadcn init that doesn't match the Vite setup.
 **Commit:** `Scaffold monorepo, infra and CI gates`
 
-## S2 — Domain core (`packages/shared`)
+## S2 — Domain core (`packages/shared`) ✅ (done)
+
+Done in `1747ff9`, `896f6ad` · [retro](sessions/S02-domain-core.md); gates and CI green.
 
 **Goal:** the correctness-critical pure logic, test-first.
 - zod schemas + types: `Event`, `Category`, `Severity` (1–5), `AlertRule`, `ChannelDestination` config base.
@@ -66,7 +70,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** `\b` word boundaries failing on accented/non-ASCII text; off-by-one at 6.0; floating-point magnitude edges (5.95); an empty keyword list returning `false`.
 **Commit:** `Domain core: matching, severity mapping, escalation rules`
 
-## S3 — Persistence, auth, user-facing API
+## S3 — Persistence, auth, user-facing API ✅ (done)
+
+Done in `320af5f` · [retro](sessions/S03-persistence-auth-api.md); gates and CI green.
 
 **Goal:** a data model and secured CRUD.
 - Prisma models: `User` (role), `ChannelDestination` (type + JSON config), `AlertRule` (category, minSeverity, keywords[], destinations m:n), `EventSource` (enabled, intervalSec, freshnessHours, lastPollAt, lastError), `Event` (source, externalId unique, category, severity, title, summary, location, url, occurredAt, contentHash), `EventRevision` (severity history), `Notification` (user, event, destination, kind match|escalation, ruleIds, status, attempts, lastError; unique user+event+destination channel).
@@ -78,7 +84,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** ownership checks missing on update/delete (IDOR); DTO validation that never runs; the password hash leaking in responses.
 **Commit:** `Persistence, auth and rule/destination API`
 
-## S4 — Ingestion
+## S4 — Ingestion ✅ (done)
+
+Done in `129c2ea` · [retro](sessions/S04-ingestion.md); gates and CI green.
 
 **Goal:** Events flow in from all three sources.
 - `EventSourceAdapter` interface; adapters: **USGS** (GeoJSON), **GDACS** (RSS, drops EQ, `occurredAt = dateadded`, content hash), **Simulated** (create/update through the admin API).
@@ -90,7 +98,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** the XML namespace (`gdacs:`) parsed wrongly; timezones; overlapping polls (one slow poll overlapping the next).
 **Commit:** `Event ingestion: USGS, GDACS and simulated sources`
 
-## S5 — Matching & delivery
+## S5 — Matching & delivery ✅ (done)
+
+Done in `69f4a38` · [retro](sessions/S05-matching-delivery.md); gates and CI green.
 
 **Goal:** Events become delivered messages.
 - On `EventIngested`: freshness check → `decideNotifications` → insert Notifications (unique key dedups) → enqueue pg-boss jobs in the same transaction (ADR 0002).
@@ -103,7 +113,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** made-up Block Kit fields; Notification and job not written in the same transaction; retries that send twice after a crash; "sent" set before the send really succeeds.
 **Commit:** `Matching and delivery: email, Slack, retries`
 
-## S6 — Frontend: user experience
+## S6 — Frontend: user experience ✅ (done)
+
+Done in `c29dbc3` · [retro](sessions/S06-frontend-user.md); gates and CI green.
 
 **Goal:** a polished UI for owning alerts. Visual direction decided at the start of the session (`frontend-design` skill).
 - Login; app shell; route guards (UX only, the server enforces).
@@ -116,7 +128,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Watch for:** the preview using different logic from the server (it must import the shared function); TanStack Query cache not refreshed after a mutation; generic template look.
 **Commit:** `Frontend: destinations, rule editor with live preview`
 
-## S7 — Frontend: admin view
+## S7 — Frontend: admin view ✅ (done)
+
+Done in `83dd33c` · [retro](sessions/S07-admin-view.md); gates and CI green.
 
 **Goal:** the four admin capabilities (D10).
 - **Event Sources:** enable/disable, interval, freshness window, last poll status/error, "poll now".
@@ -127,7 +141,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Done when:** an admin can run the full demo script from the UI alone; non-admin users never see admin routes (and the server returns 403 anyway).
 **Commit:** `Admin view: sources, simulator, events, notification log`
 
-## S8 — Extensibility proof: Webhook channel
+## S8 — Extensibility proof: Webhook channel ✅ (done)
+
+Done in `9b55c21`, `f590fe0`, `2e07d05` · [retro](sessions/S08-webhook-channel.md); gates and CI green.
 
 **Goal:** prove D11 for real.
 - Add a `WebhookChannelProvider` (POST JSON to any URL), **in its own commit, without touching the pipeline or the frontend**.
@@ -136,7 +152,9 @@ Brief analysed, grilled (Q1–Q9), glossary, D1–D16, ADR 0001–0002, live fee
 **Done when:** the user can add a Webhook destination through the generated form and receive events; the diff stat is in the retro.
 **Commit:** `Add Webhook channel (extensibility proof)`
 
-## S9 — End-to-end, hardening, submission
+## S9 — End-to-end, hardening, submission ✅ (done)
+
+Done in `84e0ae3`, `3a566b4`, `90e6262` · [retro](sessions/S09-submission.md); gates and CI green.
 
 **Goal:** a submission that can be reviewed.
 - Playwright: login as alice → create rule → admin simulates event → notification appears (Mailpit/Stand-in API checked).

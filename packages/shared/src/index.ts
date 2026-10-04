@@ -1,4 +1,5 @@
 export * from './event.js';
+export * from './event-source.js';
 export * from './freshness.js';
 export * from './health.js';
 export * from './matching.js';

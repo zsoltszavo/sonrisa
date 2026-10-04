@@ -10,6 +10,8 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(60 * 60 * 12),
+  /** `off` stops the polling scheduler (e2e tests); "poll now" and the Simulated Source still work. */
+  INGESTION_SCHEDULER: z.enum(['on', 'off']).default('on'),
 });
 
 export type Env = z.infer<typeof envSchema>;

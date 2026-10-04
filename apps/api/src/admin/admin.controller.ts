@@ -1,18 +1,63 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  type EventSource,
+  type EventSourceKey,
+  eventSourceKeySchema,
+  type EventSourceUpdate,
+  eventSourceUpdateSchema,
+  type PollResult,
+  type SimulatedEventInput,
+  simulatedEventInputSchema,
+  type StoredEvent,
+} from '@sonrisa/shared';
 import { Roles } from '../auth/decorators.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { SimulatedEventsService } from '../ingestion/simulated-events.service.js';
+import { AdminService } from './admin.service.js';
+
+const keyPipe = new ZodValidationPipe(eventSourceKeySchema);
+const simulatedEventPipe = new ZodValidationPipe(simulatedEventInputSchema);
 
 /**
  * Everything under /admin is admin-only at the class level, so a new handler can't forget it.
- * S4 adds source updates, "poll now" and the Simulated Source here.
  */
 @Roles(['admin'])
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly simulated: SimulatedEventsService,
+  ) {}
 
   @Get('event-sources')
-  eventSources() {
-    return this.prisma.eventSource.findMany({ orderBy: { key: 'asc' } });
+  eventSources(): Promise<EventSource[]> {
+    return this.admin.eventSources();
+  }
+
+  @Patch('event-sources/:key')
+  updateEventSource(
+    @Param('key', keyPipe) key: EventSourceKey,
+    @Body(new ZodValidationPipe(eventSourceUpdateSchema)) update: EventSourceUpdate,
+  ): Promise<EventSource> {
+    return this.admin.updateEventSource(key, update);
+  }
+
+  @Post('event-sources/:key/poll')
+  @HttpCode(200)
+  pollNow(@Param('key', keyPipe) key: EventSourceKey): Promise<PollResult> {
+    return this.admin.pollNow(key);
+  }
+
+  @Post('simulated-events')
+  createSimulatedEvent(@Body(simulatedEventPipe) input: SimulatedEventInput): Promise<StoredEvent> {
+    return this.simulated.create(input);
+  }
+
+  @Put('simulated-events/:id')
+  updateSimulatedEvent(
+    @Param('id') id: string,
+    @Body(simulatedEventPipe) input: SimulatedEventInput,
+  ): Promise<StoredEvent> {
+    return this.simulated.update(id, input);
   }
 }

@@ -11,11 +11,18 @@ export const DEMO_USERS = {
 /** Where the Slack Stand-in (D12, built in S5) will accept webhooks; S5 owns this URL. */
 export const SLACK_STANDIN_WORLD_ALERTS_URL = 'http://localhost:4010/hooks/world-alerts';
 
-const EVENT_SOURCES = [
+export const EVENT_SOURCES = [
   { key: 'usgs', name: 'USGS earthquakes', intervalSec: 60 },
   { key: 'gdacs', name: 'GDACS disasters', intervalSec: 300 },
   { key: 'simulated', name: 'Simulated Source', intervalSec: null },
 ] as const;
+
+/** Creates missing Event Sources; never overwrites an admin's changes to existing ones. */
+export async function seedEventSources(prisma: PrismaClient): Promise<void> {
+  for (const source of EVENT_SOURCES) {
+    await prisma.eventSource.upsert({ where: { key: source.key }, create: source, update: {} });
+  }
+}
 
 interface SeedRule {
   id: string;
@@ -30,9 +37,7 @@ interface SeedRule {
  * without duplicating it or touching anything users created themselves.
  */
 export async function seed(prisma: PrismaClient): Promise<void> {
-  for (const source of EVENT_SOURCES) {
-    await prisma.eventSource.upsert({ where: { key: source.key }, create: source, update: {} });
-  }
+  await seedEventSources(prisma);
 
   const upsertUser = async ({
     email,

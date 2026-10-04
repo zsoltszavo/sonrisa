@@ -4,5 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['test/**/*.e2e-spec.ts'],
+    // Tests drive polls themselves ("poll now", `tick()`) against the saved feed samples.
+    env: { INGESTION_SCHEDULER: 'off' },
   },
 });

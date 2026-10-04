@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import { authResponseSchema, type User } from '@sonrisa/shared';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
@@ -10,8 +10,11 @@ import { PrismaService } from '../src/prisma/prisma.service.js';
 
 export type TestApp = INestApplication<Server>;
 
-export async function createTestApp(): Promise<TestApp> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+/** `override` can swap providers, e.g. the FeedFetcher for the saved feed samples. */
+export async function createTestApp(
+  override: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+): Promise<TestApp> {
+  const moduleRef = await override(Test.createTestingModule({ imports: [AppModule] })).compile();
   const app = moduleRef.createNestApplication<INestApplication<Server>>();
   configureApp(app);
   await app.init();

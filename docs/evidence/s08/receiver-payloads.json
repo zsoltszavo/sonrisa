@@ -1,0 +1,73 @@
+[
+  {
+    "path": "/hooks/alice-ops",
+    "idempotencyKey": null,
+    "userAgent": "WorldEventAlerts-Webhook/1",
+    "body": {
+      "type": "test",
+      "text": "Test message for \"Ops webhook\"",
+      "message": "This is a test from World Event Alerts. If you can read it, this Channel Destination works.",
+      "destination": {
+        "label": "Ops webhook"
+      }
+    }
+  },
+  {
+    "path": "/hooks/alice-ops",
+    "idempotencyKey": "01a1082f-aaad-7480-9b63-4aa31c760771",
+    "userAgent": "WorldEventAlerts-Webhook/1",
+    "body": {
+      "type": "notification",
+      "id": "01a1082f-aaad-7480-9b63-4aa31c760771",
+      "kind": "match",
+      "text": "Significant (3/5) disaster: Danube flood warning for Budapest",
+      "severity": 3,
+      "previousSeverity": null,
+      "ruleCount": 1,
+      "event": {
+        "id": "01a1082f-aaa0-71b2-a32d-456cc7f77733",
+        "source": "simulated",
+        "externalId": "sim-37ff7c42-dfdc-4ed9-b669-8ac289be319b",
+        "category": "disaster",
+        "severity": 3,
+        "title": "Danube flood warning for Budapest",
+        "summary": "River levels rising after heavy rain upstream.",
+        "location": "Budapest, Hungary",
+        "url": null,
+        "occurredAt": "2026-10-04T18:31:44.027Z"
+      },
+      "destination": {
+        "label": "Ops webhook"
+      }
+    }
+  },
+  {
+    "path": "/hooks/alice-ops",
+    "idempotencyKey": "01a1082f-ba71-7338-8802-bf808116cf0f",
+    "userAgent": "WorldEventAlerts-Webhook/1",
+    "body": {
+      "type": "notification",
+      "id": "01a1082f-ba71-7338-8802-bf808116cf0f",
+      "kind": "escalation",
+      "text": "Escalated to Severe (4/5): Danube flood warning for Budapest",
+      "severity": 4,
+      "previousSeverity": 3,
+      "ruleCount": 1,
+      "event": {
+        "id": "01a1082f-aaa0-71b2-a32d-456cc7f77733",
+        "source": "simulated",
+        "externalId": "sim-37ff7c42-dfdc-4ed9-b669-8ac289be319b",
+        "category": "disaster",
+        "severity": 4,
+        "title": "Danube flood warning for Budapest",
+        "summary": "River levels rising after heavy rain upstream.",
+        "location": "Budapest, Hungary",
+        "url": null,
+        "occurredAt": "2026-10-04T18:31:44.027Z"
+      },
+      "destination": {
+        "label": "Ops webhook"
+      }
+    }
+  }
+]

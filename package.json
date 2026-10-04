@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "test": "pnpm -r test",
     "test:e2e": "pnpm -r test:e2e",
+    "test:browser": "pnpm --filter @sonrisa/e2e test:browser",
     "generate": "pnpm -r generate",
     "db:migrate": "pnpm --filter @sonrisa/api db:deploy",
     "db:seed": "pnpm --filter @sonrisa/api db:seed"

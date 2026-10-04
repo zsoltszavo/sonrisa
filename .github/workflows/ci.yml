@@ -54,3 +54,12 @@ jobs:
       - run: pnpm db:migrate
       - run: pnpm test:e2e
       - run: pnpm build
+      # Browser e2e (Playwright): it builds and starts its own API, web and Slack Stand-in.
+      - run: pnpm --filter @sonrisa/e2e exec playwright install --with-deps chromium
+      - run: pnpm test:browser
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7

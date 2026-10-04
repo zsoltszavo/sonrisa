@@ -89,3 +89,7 @@ $ pnpm test:browser  (DATABASE_URL=…/sonrisa_s6)
 - **Databases:** `sonrisa_s7` = dev/demo, `sonrisa_s6` = e2e (API and browser), `sonrisa_s9` = the throwaway one from the `pnpm demo` check (can be dropped). The default `sonrisa` DB still has the S3 drift. A fresh clone never sees it.
 - The rest is in `docs/next-steps.md`.
 
+
+## CI
+
+Commit `90e6262` (with `84e0ae3` and `3a566b4`): GitHub Actions run [37227442132](https://github.com/zsoltszavo/sonrisa/actions/runs/37227442132), job "typecheck · lint · test · build" including the Playwright step: **success**.

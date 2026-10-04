@@ -1,0 +1,10 @@
+// Domain models arrive in S3. Until then this only wires the client to Postgres.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

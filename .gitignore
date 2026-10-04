@@ -9,3 +9,10 @@ coverage/
 *.log
 playwright-report/
 test-results/
+
+# Generated
+apps/api/src/generated/
+*.tsbuildinfo
+
+# Local AI tooling
+.serena/

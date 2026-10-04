@@ -42,7 +42,7 @@ export function DestinationsPage() {
     <PageWidth>
       <PageHeader
         title="Destinations"
-        description="The places your alerts are delivered to: an email address or a Slack channel. Send a test to check one works before a rule uses it."
+        description="The places your alerts are delivered to, such as an email address or a Slack channel. Send a test to check one works before a rule uses it."
         action={destinations.data && destinations.data.length > 0 ? add : undefined}
       />
       {destinations.isPending || channels.isPending ? (
@@ -58,8 +58,8 @@ export function DestinationsPage() {
         />
       ) : destinations.data.length === 0 ? (
         <EmptyState title="No destinations yet" action={add}>
-          Add your email address or a Slack channel so your alert rules have somewhere to send
-          alerts.
+          Add a destination, such as your email address or a Slack channel, so your alert rules have
+          somewhere to send alerts.
         </EmptyState>
       ) : (
         <ul className="grid gap-3" aria-label="Destinations">

@@ -183,7 +183,7 @@ function DestinationForm({
         <Input
           id={`${id}-label`}
           value={label}
-          placeholder={channelKey === 'slack' ? 'Team · #ops-alerts' : 'My work email'}
+          placeholder="A name you'll recognise, e.g. Ops alerts"
           onChange={(event) => {
             setLabel(event.target.value);
           }}

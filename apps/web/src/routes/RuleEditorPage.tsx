@@ -218,7 +218,7 @@ export function RuleEditor({
             <p>
               You have no destinations yet.{' '}
               <Link to="/destinations" className="underline">
-                Add an email address or Slack channel
+                Add a destination
               </Link>{' '}
               first.
             </p>

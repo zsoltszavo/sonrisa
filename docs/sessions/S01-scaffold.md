@@ -58,7 +58,7 @@ build: shared Done · api Done · web ✓ built
 gates exit=0
 ```
 
-CI on GitHub runs on the first push (pending the human-approved commit).
+CI on GitHub: ✅ green on the first push of `0c00658` (all steps incl. e2e against the Postgres service), https://github.com/zsoltszavo/sonrisa/actions/runs/37213208664
 
 ## Notes for later sessions
 

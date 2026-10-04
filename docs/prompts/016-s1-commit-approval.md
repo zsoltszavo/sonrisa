@@ -11,4 +11,4 @@ I agree with that commit.
 
 ## Outcome
 
-- Committed `Scaffold monorepo, infra and CI gates` and pushed to `main`; CI result is recorded in the S1 retro.
+- Committed `Scaffold monorepo, infra and CI gates` and pushed to `main`; CI green on the first run (https://github.com/zsoltszavo/sonrisa/actions/runs/37213208664).

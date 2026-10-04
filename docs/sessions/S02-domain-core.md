@@ -11,7 +11,7 @@
 - **`notifications.ts`:** `decideNotifications({ event, rules, alreadyNotified })` → `match` / `escalation` per (User, Channel Destination), listing every matching rule.
 - **`freshness.ts`:** `isFresh(event, hours, now)`, inclusive edge, default 6 h.
 
-Tests: 108 in 7 files. They include example tests for every D4 and ADR 0001 edge case, checks against the saved USGS and GDACS samples, and fast-check properties: normalising is idempotent and case-blind, a higher threshold never matches more, adding a Keyword never matches less, Severity is monotonic in magnitude, there's at most one Notification per recipient, a match never goes to someone already notified, and nothing escalates unless the Severity goes above what was already notified.
+Tests: 109 in 7 files. They include example tests for every D4 and ADR 0001 edge case, checks against the saved USGS and GDACS samples, and fast-check properties: normalising is idempotent and case-blind, a higher threshold never matches more, adding a Keyword never matches less, Severity is monotonic in magnitude, there's at most one Notification per recipient, a match never goes to someone already notified, and nothing escalates unless the Severity goes above what was already notified.
 
 ## Deviation from the plan
 
@@ -23,6 +23,7 @@ The plan sketched `decideNotifications(previous, next, rules, alreadyNotified)`.
 - **Its own apostrophe rule** (R19): joining across apostrophes fixed the `Pāpa‘ikou` case from the USGS sample but broke `Côte d’Ivoire`. Both readings are now matched.
 - **Literal float edges** (R20): a raw 5.96 would sit below the M6 edge while USGS titles it "M 6.0"; the sample check pinned it.
 - **Mutation script** (R21): the restore used `git checkout` on untracked files and failed silently, leaving four mutations in the source. Caught by `git status`, reverted, and tests re-run.
+- **A review fix that passed locally but failed CI** (R23): moving the apostrophe step before NFKD (CR13) missed characters that only *become* apostrophes after NFKD (U+0374 → U+02B9). CI's random fast-check seed found it on `1747ff9`. Fixed in a follow-up commit; the property now runs 10,000 cases.
 - **Invented type usage** (R22): `fc.RecordValue` takes two type arguments.
 - Missed by the AI, caught by review: `javascript:` URLs passing `z.url()`, `null` dates coercing to 1970, NFKD not folding `ı`/`ł`/`ß`, `´` handled after NFKD, test util in `dist`, flip-flop re-escalation.
 
@@ -53,7 +54,7 @@ $ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build
 packages/shared typecheck: Done · apps/api typecheck: Done · apps/web typecheck: Done
 $ eslint . --max-warnings=0        (no problems)
 All matched files use Prettier code style!
-packages/shared test:  Test Files  7 passed (7)   Tests  108 passed (108)
+packages/shared test:  Test Files  7 passed (7)   Tests  109 passed (109)
 apps/api test:         Test Files  1 passed (1)   Tests  2 passed (2)
 apps/web test:         Test Files  1 passed (1)   Tests  4 passed (4)
 build: shared Done · api Done · web ✓ built

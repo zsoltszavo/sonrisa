@@ -18,6 +18,7 @@ describe('normaliseText', () => {
     ['Straße', 'strasse'],
     ['Tromsø', 'tromso'],
     ['L´Aquila', 'laquila'],
+    ['\u0374', ''],
   ])('%j → %j', (input, expected) => {
     expect(normaliseText(input)).toBe(expected);
   });
@@ -28,6 +29,7 @@ describe('normaliseText', () => {
         const once = normaliseText(s);
         expect(normaliseText(once)).toBe(once);
       }),
+      { numRuns: 10_000 },
     );
   });
 

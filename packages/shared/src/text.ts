@@ -2,7 +2,8 @@
  * Apostrophe-like characters are ambiguous: in "Pāpa‘ikou" (USGS place, ʻokina) they sit inside
  * a word, in "Côte d’Ivoire" or "L'Aquila" they separate words. `normaliseText` joins across
  * them; `normalisedVariants` also offers the split form so both readings can match.
- * Replaced before NFKD, which would turn "´" into a space plus a combining accent.
+ * Replaced before NFKD, which would turn "´" into a space plus a combining accent, and again
+ * after it, because NFKD turns "ʹ" (U+0374) into the apostrophe-like "ʹ" (U+02B9; found by CI's fast-check seed).
  */
 const APOSTROPHES = /['`´‘’ʹʻʼ]/gu;
 const COMBINING_MARKS = /\p{M}/gu;
@@ -44,6 +45,7 @@ function normalise(text: string, apostrophe: '' | ' '): string {
   return text
     .replace(APOSTROPHES, apostrophe)
     .normalize('NFKD')
+    .replace(APOSTROPHES, apostrophe)
     .replace(COMBINING_MARKS, '')
     .toLowerCase()
     .replace(FOLDABLE, (letter) => LETTER_FOLDS[letter] ?? letter)

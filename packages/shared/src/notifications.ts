@@ -1,4 +1,5 @@
 import type { AlertRule, Severity } from './event.js';
+import type { NotificationKind } from './feed.js';
 import { eventMatcher, type MatchableEvent } from './matching.js';
 
 /**
@@ -14,8 +15,6 @@ export interface NotifiedRecipient extends Recipient {
   /** The highest Severity this recipient has been notified about for this Event. */
   highestSeverity: Severity;
 }
-
-export type NotificationKind = 'match' | 'escalation';
 
 export interface NotificationDecision extends Recipient {
   kind: NotificationKind;

@@ -175,4 +175,6 @@ model Notification {
   @@unique([userId, eventId, destinationId, severity])
   @@index([eventId])
   @@index([status, createdAt])
+  // GET /me/notifications: a user's newest first.
+  @@index([userId, createdAt])
 }

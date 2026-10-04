@@ -16,7 +16,15 @@ import {
   whyText,
 } from './message.js';
 
-const configSchema = z.strictObject({ to: emailSchema });
+// title/description/format reach the generated destination form through GET /channels (D11).
+// `format` is set by hand: emailSchema trims and lower-cases first, and JSON Schema can't show a transform.
+const configSchema = z.strictObject({
+  to: emailSchema.meta({
+    title: 'Email address',
+    description: 'Alerts are sent to this address.',
+    format: 'email',
+  }),
+});
 type EmailConfig = z.infer<typeof configSchema>;
 
 const escapeHtml = (text: string): string =>

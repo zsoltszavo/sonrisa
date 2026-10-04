@@ -1,11 +1,20 @@
 import { BadRequestException } from '@nestjs/common';
+import type { ValidationErrorBody } from '@sonrisa/shared';
 
-export interface ValidationIssue {
+interface Issue {
   path: PropertyKey[];
   message: string;
 }
 
-/** The one 400 shape every validation failure uses (pipe, Channel config, rule destinations). */
-export function validationError(issues: ValidationIssue[]): BadRequestException {
-  return new BadRequestException({ message: 'Validation failed', issues });
+/** The one 400 shape every validation failure uses (`validationErrorBodySchema` in shared). */
+export function validationError(issues: Issue[]): BadRequestException {
+  const body: ValidationErrorBody = {
+    message: 'Validation failed',
+    // zod paths may hold symbols in theory; JSON can't, so name them.
+    issues: issues.map(({ path, message }) => ({
+      path: path.map((key) => (typeof key === 'symbol' ? String(key) : key)),
+      message,
+    })),
+  };
+  return new BadRequestException(body);
 }

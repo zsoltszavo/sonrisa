@@ -144,10 +144,16 @@ export class SlackChannel implements ChannelProvider<{ webhookUrl: string }> {
     this.standinOrigin = config.get('SLACK_STANDIN_URL', { infer: true });
     this.configSchema = z.strictObject({
       // abort: an invalid URL gets one issue, not the host issue as well.
-      webhookUrl: z.url({ protocol: /^https?$/, abort: true }).superRefine((url, ctx) => {
-        const problem = webhookUrlProblem(url, this.standinOrigin);
-        if (problem) ctx.addIssue({ code: 'custom', message: problem });
-      }),
+      webhookUrl: z
+        .url({ protocol: /^https?$/, abort: true })
+        .superRefine((url, ctx) => {
+          const problem = webhookUrlProblem(url, this.standinOrigin);
+          if (problem) ctx.addIssue({ code: 'custom', message: problem });
+        })
+        .meta({
+          title: 'Webhook URL',
+          description: 'The Incoming Webhook URL Slack gives you for one channel.',
+        }),
     });
   }
 

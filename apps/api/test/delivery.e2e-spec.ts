@@ -456,9 +456,14 @@ describe('channels API', () => {
     const response = await api().get('/api/channels').set('Authorization', user.auth).expect(200);
     const channels = z.array(channelInfoSchema).parse(response.body);
     expect(channels.map((c) => c.key)).toEqual(['email', 'slack']);
+    // The web app builds destination forms from these, so the labels must come through (S6).
+    expect(channels[0]?.configSchema).toMatchObject({
+      properties: { to: { type: 'string', format: 'email', title: 'Email address' } },
+      required: ['to'],
+    });
     expect(channels[1]?.configSchema).toMatchObject({
       type: 'object',
-      properties: { webhookUrl: { type: 'string', format: 'uri' } },
+      properties: { webhookUrl: { type: 'string', format: 'uri', title: 'Webhook URL' } },
       required: ['webhookUrl'],
       additionalProperties: false,
     });

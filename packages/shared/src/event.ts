@@ -5,7 +5,9 @@ export const categorySchema = z.enum(['earthquake', 'disaster', 'news', 'market'
 export type Category = z.infer<typeof categorySchema>;
 
 /** Common Severity scale: 1 (minor) to 5 (critical). */
-export const severitySchema = z.literal([1, 2, 3, 4, 5]);
+/** Every Severity, lowest first. */
+export const SEVERITIES = [1, 2, 3, 4, 5] as const;
+export const severitySchema = z.literal(SEVERITIES);
 export type Severity = z.infer<typeof severitySchema>;
 
 export const eventSourceKeySchema = z.enum(['usgs', 'gdacs', 'simulated']);

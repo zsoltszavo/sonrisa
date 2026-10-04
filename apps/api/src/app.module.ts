@@ -9,6 +9,8 @@ import { validateEnv } from './config/env.js';
 import { DeliveryModule } from './delivery/delivery.module.js';
 import { DestinationsController } from './destinations/destinations.controller.js';
 import { DestinationsService } from './destinations/destinations.service.js';
+import { EventsController } from './feed/events.controller.js';
+import { FeedService } from './feed/feed.service.js';
 import { HealthController } from './health/health.controller.js';
 import { IngestionModule } from './ingestion/ingestion.module.js';
 import { MeController } from './me/me.controller.js';
@@ -35,8 +37,9 @@ import { RulesService } from './rules/rules.service.js';
     MeController,
     DestinationsController,
     RulesController,
+    EventsController,
     AdminController,
   ],
-  providers: [DestinationsService, RulesService, AdminService],
+  providers: [DestinationsService, RulesService, FeedService, AdminService],
 })
 export class AppModule {}

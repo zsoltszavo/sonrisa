@@ -1,13 +1,23 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource-variable/geist';
+@import '@fontsource-variable/unbounded';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  /* sonrisa.hu: Benzin (licensed) for display, Courier New for body. Unbounded is the free wide-geometric stand-in. */
+  --font-heading: 'Unbounded Variable', 'Benzin', sans-serif;
+  --font-sans: 'Courier New', Courier, monospace;
+  --color-forest: var(--forest);
+  --color-mint: var(--mint);
+  --color-mist: var(--mist);
+  --color-lime: var(--lime);
+  --color-sev-1: var(--sev-1);
+  --color-sev-2: var(--sev-2);
+  --color-sev-3: var(--sev-3);
+  --color-sev-4: var(--sev-4);
+  --color-sev-5: var(--sev-5);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,72 +59,50 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Palette lifted from sonrisa.hu's stylesheet. */
+  --forest: #032c13;
+  --mint: #8ee4a9;
+  --mist: #f1f9ee;
+  --lime: #7dcf3d;
+  /* Severity ramp follows the site's accent colours (green, yellow, orange) and GDACS Green/Orange/Red. */
+  --sev-1: #c2d0c2;
+  --sev-2: #8ee4a9;
+  --sev-3: #f5c645;
+  --sev-4: #fe602f;
+  --sev-5: #b3261e;
+  --background: #ffffff;
+  --foreground: #2e2e2e;
+  --card: #ffffff;
+  --card-foreground: #2e2e2e;
+  --popover: #ffffff;
+  --popover-foreground: #2e2e2e;
+  --primary: #8ee4a9;
+  --primary-foreground: #032c13;
+  --secondary: #f1f9ee;
+  --secondary-foreground: #032c13;
+  --muted: #f1f9ee;
+  /* The site's #9e9e9e grey fails WCAG AA on white; this keeps the tone at 5.9:1. */
+  --muted-foreground: #5b655e;
+  --accent: #f1f9ee;
+  --accent-foreground: #032c13;
+  --destructive: #b3261e;
+  --border: #e2e2e2;
+  --input: #c4c4c4;
+  --ring: #032c13;
+  --chart-1: #8ee4a9;
+  --chart-2: #3f5f4a;
+  --chart-3: #f5c645;
+  --chart-4: #fe602f;
+  --chart-5: #032c13;
+  --radius: 0rem;
+  --sidebar: #f1f9ee;
+  --sidebar-foreground: #032c13;
+  --sidebar-primary: #032c13;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #8ee4a9;
+  --sidebar-accent-foreground: #032c13;
+  --sidebar-border: #e2e2e2;
+  --sidebar-ring: #032c13;
 }
 
 @layer base {
@@ -122,9 +110,62 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    color: var(--forest);
+    font-weight: 500;
+    line-height: 1.1;
+  }
+  :focus-visible {
+    outline: 2px solid var(--forest);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
   html {
     @apply font-sans;
   }
+}
+
+/* Minimum-Severity slider: a forest track with a square mint thumb, matching the square buttons. */
+.severity-range {
+  appearance: none;
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+}
+.severity-range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--forest);
+}
+.severity-range::-moz-range-track {
+  height: 4px;
+  background: var(--forest);
+}
+.severity-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  background: var(--mint);
+  border: 2px solid var(--forest);
+}
+.severity-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  background: var(--mint);
+  border: 2px solid var(--forest);
 }

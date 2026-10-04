@@ -4,10 +4,18 @@ import { PORTS, STANDIN_URL } from './env.ts';
 /**
  * Browser end-to-end test of the whole stack: the built API, the Vite dev server and a Slack
  * Stand-in, each on its own port so a dev stack (3000 / 5173 / 4010) can keep running beside it.
- * Postgres and Mailpit come from docker compose. DATABASE_URL picks the database (the root .env
- * otherwise); use the e2e one, never the dev/demo one: this run seeds it and adds rules to alice.
+ * Postgres and Mailpit come from docker compose. DATABASE_URL must be set explicitly: this run
+ * migrates and seeds that database and adds Events and Notifications to it.
  */
 const root = '..';
+
+// The API step seeds and adds data, so never let it fall back to the root .env's (dev/demo) database.
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    'Set DATABASE_URL to a database for this test (not the demo one), e.g. ' +
+      'postgresql://sonrisa:sonrisa@localhost:5433/sonrisa_e2e',
+  );
+}
 
 export default defineConfig({
   testDir: './tests',

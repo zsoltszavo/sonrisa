@@ -24,7 +24,7 @@ A user's statement of what counts as important to them: a Category, a minimum Se
 A word or phrase written by the user on an Alert Rule and looked for in an Event's text. Keywords narrow a rule. A rule with no Keywords matches on Category and Severity alone.
 
 ### Channel
-A way of delivering a Notification to a user: `email`, `slack`, with more to come later.
+A way of delivering a Notification to a user: `email`, `slack`, `webhook` (added in S8 to prove more can be plugged in).
 
 ### Notification
 One delivery to one user on one Channel about one Event. It lists every Alert Rule of that user that matched. Status: `pending` → `sent` | `failed`.

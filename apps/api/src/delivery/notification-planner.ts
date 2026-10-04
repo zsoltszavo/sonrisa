@@ -35,12 +35,15 @@ export class NotificationPlanner implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Returns the ids of the Notifications it created (for logs and tests). */
-  async plan({ event }: EventIngested, tx: Prisma.TransactionClient): Promise<string[]> {
+  async plan({ event, previous }: EventIngested, tx: Prisma.TransactionClient): Promise<string[]> {
     const source = await tx.eventSource.findUniqueOrThrow({
       where: { key: event.source },
       select: { freshnessHours: true },
     });
-    if (!isFresh(event, source.freshnessHours, new Date())) return [];
+    // The Freshness Window keeps old Events quiet (D15). A raised Severity is news now, however
+    // old the Event: GDACS keeps `occurredAt` while a Green alert turns Red days later (D25).
+    const raised = previous !== null && event.severity > previous.severity;
+    if (!raised && !isFresh(event, source.freshnessHours, new Date())) return [];
 
     // Category and Severity narrow the rules in SQL; Keywords are matched by the shared code.
     const rules = await tx.alertRule.findMany({

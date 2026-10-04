@@ -22,7 +22,7 @@ export function NotificationsPage() {
     <PageWidth>
       <PageHeader
         title="My notifications"
-        description="Every alert sent to you, newest first. An Escalation follows up when an Event you were told about becomes more severe."
+        description="Your newest alerts and whether they were delivered, newest first. An Escalation follows up when an Event you were told about becomes more severe."
       />
       {notifications.isPending ? (
         <Loading label="Loading your notifications…" />

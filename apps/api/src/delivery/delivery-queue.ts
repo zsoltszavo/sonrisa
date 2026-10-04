@@ -6,6 +6,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MAX_DELIVERY_ATTEMPTS } from '@sonrisa/shared';
 import { type Db, PgBoss } from 'pg-boss';
 import { z } from 'zod';
 import type { Env } from '../config/env.js';
@@ -55,7 +56,9 @@ export class DeliveryQueue implements OnModuleInit, OnApplicationBootstrap, OnMo
   async onModuleInit(): Promise<void> {
     await this.boss.start();
     await this.boss.createQueue(DELIVERY_QUEUE, {
-      retryLimit: 2,
+      // One more run than MAX_DELIVERY_ATTEMPTS: if every claimed attempt is interrupted, the last
+      // run still finds no attempt left and marks the Notification failed (CR40, CR94).
+      retryLimit: MAX_DELIVERY_ATTEMPTS,
       retryDelay: 5,
       retryBackoff: true,
       expireInSeconds: 120,

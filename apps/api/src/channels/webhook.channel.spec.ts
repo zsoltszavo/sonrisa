@@ -331,7 +331,7 @@ describe('WebhookChannel.send', () => {
     // Not exempt, so the real resolver runs: localhost → 127.0.0.1 / ::1.
     expect(await failure('https://localhost:1/hook')).toMatchObject({
       retryable: false,
-      message: expect.stringContaining('which is not a public address') as unknown,
+      message: expect.stringContaining('does not resolve to a public address') as unknown,
     });
   });
 
@@ -414,7 +414,7 @@ describe('deliveryErrorFor / deliveryErrorForTransport', () => {
     Object.assign(new Error(`getaddrinfo ${code} x.example`), { code });
 
   it.each([
-    ['a blocked address', new BlockedAddressError('x.example', '10.0.0.1'), false],
+    ['a blocked address', new BlockedAddressError('x.example'), false],
     ['a host that does not exist (CR74)', withCode('ENOTFOUND'), false],
     ['a resolver that is down for now', withCode('EAI_AGAIN'), true],
     ['a refused connection', withCode('ECONNREFUSED'), true],

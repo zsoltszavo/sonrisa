@@ -353,13 +353,15 @@ function SelectedEvent({ id }: { id: string }) {
           </div>
           <div className="grid gap-2" aria-live="polite">
             <h3 className="font-heading text-[15px]">
-              Notifications ({event.data.notifications.length})
+              Notifications ({event.data.notificationCount})
             </h3>
             {event.data.notifications.length === 0 ? (
               <p className="text-sm">
-                No Alert Rule matched this Event, so nobody was notified. A{' '}
+                Nobody was notified. Either no Alert Rule matched (a{' '}
                 {CATEGORY_LABELS[event.data.category]} rule with a minimum Severity of{' '}
-                {event.data.severity} or less (and a matching Keyword, if it has any) would.
+                {event.data.severity} or less, and a matching Keyword if it has any, would), or the
+                Event is older than the Simulated Source's Freshness Window. Raising its Severity
+                notifies either way.
               </p>
             ) : (
               <AdminNotificationList

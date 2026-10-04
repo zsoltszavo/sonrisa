@@ -131,11 +131,12 @@ export function EventDetailPage() {
 
           <section aria-labelledby="caused" className="grid gap-4">
             <h2 id="caused" className="text-2xl">
-              Notifications it caused ({event.data.notifications.length})
+              Notifications it caused ({event.data.notificationCount})
             </h2>
             {event.data.notifications.length === 0 ? (
               <EmptyState title="Nobody was notified">
-                No Alert Rule matched, or the Event was older than its source's Freshness Window.
+                No Alert Rule matched, or the Event was older than its source's Freshness Window
+                (and its Severity was never raised).
               </EmptyState>
             ) : (
               <AdminNotificationList

@@ -288,6 +288,27 @@ describe('matching and delivery', () => {
     expect(rows.map((r) => r.kind)).toEqual(['match', 'match']);
   });
 
+  it('notifies when an Event outside the Freshness Window is raised, but not on other edits (D25)', async () => {
+    const keyword = `${RUN}raisedstale`;
+    const ivan = await subscriber('ivan', keyword, 4);
+    const occurredAt = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000); // a GDACS alert from 3 days ago
+    const event = await simulate(quake(keyword, 2, { occurredAt }));
+    await update(event.id, quake(keyword, 2, { occurredAt, summary: 'Revised text' }));
+    expect(await prisma.notification.count({ where: { userId: ivan.user.id } })).toBe(0);
+
+    await update(event.id, quake(keyword, 5, { occurredAt }));
+    const rows = await waitFor(
+      'match for the raised stale Event',
+      () => notificationsFor(ivan.user.id),
+      (r) => r.length === 2 && settled(r),
+    );
+    expect(rows.map((r) => r.kind)).toEqual(['match', 'match']);
+
+    // Lowering it again is silent, as for any Event (ADR 0001).
+    await update(event.id, quake(keyword, 4, { occurredAt }));
+    expect(await prisma.notification.count({ where: { userId: ivan.user.id } })).toBe(2);
+  });
+
   it('writes Notifications and their jobs in the Event transaction (ADR 0002)', async () => {
     const keyword = `${RUN}atomic`;
     const carol = await subscriber('carol', keyword);

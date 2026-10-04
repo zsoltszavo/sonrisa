@@ -7,7 +7,8 @@ import { MAILPIT_URL, STANDIN_URL } from '../env.ts';
  * The core loop through the real UI: alice adds a Slack destination and an Alert Rule, an admin
  * simulates an Event, and the Notification reaches Mailpit and the Slack Stand-in and shows up
  * on alice's Notifications page. Every name carries RUN, so reruns on the same database (and the
- * seeded rules alice already has) can't satisfy the checks by accident.
+ * seeded rules alice already has) can't satisfy the checks by accident. The rule and destination
+ * are removed afterwards; the Event and its Notifications stay (there is no API to delete them).
  */
 const RUN = randomUUID().slice(0, 8);
 /** A made-up company name: the Keyword, and a whole word in the Event title (D4). */
@@ -40,9 +41,7 @@ async function signOut(page: Page) {
 }
 
 const mailpitSearchSchema = z.object({
-  messages: z.array(
-    z.object({ Subject: z.string(), To: z.array(z.object({ Address: z.string() })) }),
-  ),
+  messages: z.array(z.object({ Subject: z.string() })),
 });
 const standinMessagesSchema = z.array(z.object({ channel: z.string(), payload: z.unknown() }));
 
@@ -59,13 +58,8 @@ async function slackMessagesIn(channel: string) {
   return standinMessagesSchema.parse(await response.json()).filter((m) => m.channel === channel);
 }
 
-const listSchema = z.array(
-  z.object({
-    id: z.string(),
-    label: z.string().optional(),
-    keywords: z.array(z.string()).optional(),
-  }),
-);
+const ruleSchema = z.object({ id: z.string(), keywords: z.array(z.string()) });
+const destinationSchema = z.object({ id: z.string(), label: z.string() });
 
 /** Removes this run's rule and destination, so reruns don't pile them up on alice. */
 async function removeAliceTestData(request: APIRequestContext) {
@@ -73,18 +67,21 @@ async function removeAliceTestData(request: APIRequestContext) {
   expect(login.ok()).toBe(true);
   const { accessToken } = z.object({ accessToken: z.string() }).parse(await login.json());
   const headers = { Authorization: `Bearer ${accessToken}` };
-  const remove = async (
-    path: string,
-    mine: (item: z.infer<typeof listSchema>[number]) => boolean,
-  ) => {
-    const items = listSchema.parse(await (await request.get(`/api/${path}`, { headers })).json());
-    for (const item of items.filter(mine)) {
-      expect((await request.delete(`/api/${path}/${item.id}`, { headers })).ok()).toBe(true);
-    }
+  const mine = async <T extends { id: string }>(path: string, schema: z.ZodType<T>) => {
+    const response = await request.get(`/api/${path}`, { headers });
+    expect(response.ok()).toBe(true);
+    return z.array(schema).parse(await response.json());
+  };
+  const remove = async (path: string, id: string) => {
+    expect((await request.delete(`/api/${path}/${id}`, { headers })).ok()).toBe(true);
   };
   // The rule first: a destination a rule still uses can't be deleted.
-  await remove('rules', (rule) => rule.keywords?.includes(KEYWORD) ?? false);
-  await remove('destinations', (destination) => destination.label === SLACK_DESTINATION);
+  for (const rule of await mine('rules', ruleSchema)) {
+    if (rule.keywords.includes(KEYWORD)) await remove('rules', rule.id);
+  }
+  for (const destination of await mine('destinations', destinationSchema)) {
+    if (destination.label === SLACK_DESTINATION) await remove('destinations', destination.id);
+  }
 }
 
 test.afterEach(async ({ request }) => {
@@ -147,9 +144,20 @@ test('a rule alice creates in the UI notifies her by email and Slack', async ({ 
 
   await test.step('the admin Notification log shows both deliveries as sent', async () => {
     await page.goto('/admin/notifications');
-    const entries = page.getByRole('listitem').filter({ hasText: EVENT_TITLE });
-    await expect(entries).toHaveCount(2);
-    await expect(entries.filter({ hasText: 'Sent' })).toHaveCount(2);
+    const entries = page
+      .getByRole('list', { name: 'Notifications' })
+      .getByRole('listitem')
+      .filter({ hasText: EVENT_TITLE });
+    // The Stand-in can hold the message a moment before the API records `sent`, and the log
+    // refreshes only every 10 s, so reload until the status badges say so.
+    await expect(async () => {
+      await page.reload();
+      await expect(entries).toHaveCount(2, { timeout: 1_000 });
+      await expect(entries.filter({ has: page.getByText('Sent', { exact: true }) })).toHaveCount(
+        2,
+        { timeout: 1_000 },
+      );
+    }).toPass({ timeout: 20_000 });
     await evidence(page, '03-admin-notification-log');
     await signOut(page);
   });
@@ -162,7 +170,8 @@ test('a rule alice creates in the UI notifies her by email and Slack', async ({ 
       .getByRole('listitem')
       .filter({ hasText: EVENT_TITLE });
     await expect(mine).toHaveCount(2);
-    await expect(mine.filter({ hasText: 'Delivered' })).toHaveCount(2);
+    // "Not delivered" contains "delivered" too: the failed rows must not count.
+    await expect(mine.filter({ hasText: 'Delivered', hasNotText: 'Not delivered' })).toHaveCount(2);
     await evidence(page, '04-alice-notifications');
   });
 

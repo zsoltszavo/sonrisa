@@ -71,10 +71,14 @@ export function isBlockedAddress(address: string): boolean {
   return BLOCKED.check(address, family === 4 ? 'ipv4' : 'ipv6');
 }
 
-/** The resolved address of a webhook host is not public: permanent, the URL itself is the problem. */
+/**
+ * The resolved address of a webhook host is not public: permanent, the URL itself is the problem.
+ * The message leaves the address out: "Send test" shows it to the user, who shouldn't learn what
+ * internal names resolve to (CR93).
+ */
 export class BlockedAddressError extends Error {
-  constructor(hostname: string, address: string) {
-    super(`${hostname} resolves to ${address}, which is not a public address`);
+  constructor(hostname: string) {
+    super(`${hostname} does not resolve to a public address`);
     this.name = 'BlockedAddressError';
   }
 }
@@ -129,7 +133,7 @@ export function checkedLookup(resolve: ResolveAll = dns.lookup): LookupFunction 
       const blocked = addresses.find(({ address }) => isBlockedAddress(address));
       const first = addresses[0];
       if (blocked || !first) {
-        callback(new BlockedAddressError(hostname, blocked?.address ?? 'no address'), '');
+        callback(new BlockedAddressError(hostname), '');
         return;
       }
       if (options.all) callback(null, addresses);

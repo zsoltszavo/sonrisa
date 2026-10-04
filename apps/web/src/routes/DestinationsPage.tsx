@@ -65,7 +65,8 @@ export function DestinationsPage() {
         <ul className="grid gap-3" aria-label="Destinations">
           {destinations.data.map((destination) => (
             <DestinationItem
-              key={destination.id}
+              // A changed config remounts the row, so an old "Test message sent" doesn't vouch for it.
+              key={`${destination.id}:${JSON.stringify(destination.config)}`}
               destination={destination}
               onEdit={() => {
                 setEditing(destination);

@@ -84,3 +84,7 @@ $ pnpm test:e2e (DATABASE_URL=…/sonrisa_s6)
 - **Slack Stand-in in dev:** `.env` has no `SLACK_STANDIN_URL`, so the seeded `#world-alerts` destination fails ("must be a Slack Incoming Webhook") unless the API starts with `SLACK_STANDIN_URL=http://localhost:4010` (as `.env.example` says). Worth a line in the README demo script (S9).
 - **S8:** a Webhook destination's Notifications show up in the log with no admin change (the channel is a plain string).
 - **S9 / next steps:** pagination for the explorer and the log beyond the limit; user management and an overview dashboard (D10); SSE instead of 2 s polling if the console ever needs it; route-level code splitting (Vite still warns about chunk size).
+
+## CI
+
+Commit `83dd33c`: GitHub Actions run [37223881832](https://github.com/zsoltszavo/sonrisa/actions/runs/37223881832), job "typecheck · lint · test · build": **success**.

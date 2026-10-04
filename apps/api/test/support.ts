@@ -54,3 +54,20 @@ export async function registerAdmin(app: TestApp): Promise<TestUser> {
   });
   return { ...registered, user: { ...registered.user, role: 'admin' } };
 }
+
+/** Polls `read` every 250 ms until `done` (delivery runs in the background worker). */
+export async function waitFor<T>(
+  what: string,
+  read: () => Promise<T>,
+  done: (value: T) => boolean,
+  timeoutMs = 20_000,
+): Promise<T> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const value = await read();
+    if (done(value)) return value;
+    if (Date.now() > deadline)
+      throw new Error(`Timed out waiting for ${what}: ${JSON.stringify(value)}`);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+}

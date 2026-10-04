@@ -6,6 +6,7 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { type ChannelProvider, DeliveryError, type DeliveryMessage } from './channel-provider.js';
 import { EmailChannel } from './email.channel.js';
 import { SlackChannel } from './slack.channel.js';
+import { WebhookChannel } from './webhook.channel.js';
 
 /**
  * A provider with its config type sealed in: callers hand over the stored (unknown) config and
@@ -46,8 +47,8 @@ function register<Config extends Prisma.InputJsonObject>(
 export class ChannelRegistry {
   private readonly channels: Map<string, RegisteredChannel>;
 
-  constructor(email: EmailChannel, slack: SlackChannel) {
-    const registered = [register(email), register(slack)];
+  constructor(email: EmailChannel, slack: SlackChannel, webhook: WebhookChannel) {
+    const registered = [register(email), register(slack), register(webhook)];
     this.channels = new Map(registered.map((channel) => [channel.info.key, channel]));
   }
 

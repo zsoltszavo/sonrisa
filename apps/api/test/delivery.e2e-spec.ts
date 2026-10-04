@@ -22,6 +22,7 @@ import {
   STANDIN_URL,
   type TestApp,
   type TestUser,
+  waitFor,
 } from './support.js';
 
 /**
@@ -55,22 +56,6 @@ async function startStandin(): Promise<ChildProcess> {
 }
 
 const api = () => request(app.getHttpServer());
-
-async function waitFor<T>(
-  what: string,
-  read: () => Promise<T>,
-  done: (value: T) => boolean,
-  timeoutMs = 20_000,
-): Promise<T> {
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    const value = await read();
-    if (done(value)) return value;
-    if (Date.now() > deadline)
-      throw new Error(`Timed out waiting for ${what}: ${JSON.stringify(value)}`);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-}
 
 const standinMessageSchema = z.object({
   channel: z.string(),
@@ -455,7 +440,7 @@ describe('channels API', () => {
     const user = await registerUser(app, 'channels');
     const response = await api().get('/api/channels').set('Authorization', user.auth).expect(200);
     const channels = z.array(channelInfoSchema).parse(response.body);
-    expect(channels.map((c) => c.key)).toEqual(['email', 'slack']);
+    expect(channels.map((c) => c.key)).toEqual(['email', 'slack', 'webhook']);
     // The web app builds destination forms from these, so the labels must come through (S6).
     expect(channels[0]?.configSchema).toMatchObject({
       properties: { to: { type: 'string', format: 'email', title: 'Email address' } },

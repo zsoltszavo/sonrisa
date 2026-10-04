@@ -22,6 +22,21 @@ const envSchema = z.object({
    * deployment that forgets it can't post to a local port (CR43); `.env.example` sets it for dev.
    */
   SLACK_STANDIN_URL: z.union([z.literal(''), z.url({ protocol: /^https?$/ })]).default(''),
+  /**
+   * Comma-separated origins (e.g. `http://localhost:4012`) a Webhook destination may use even
+   * though they break the URL rules (D24): a local receiver in dev and e2e. Empty (the default) =
+   * public https endpoints only.
+   */
+  WEBHOOK_ALLOWED_ORIGINS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.url({ protocol: /^https?$/ }).transform((origin) => new URL(origin).origin))),
   /** First retry delay; each later one doubles it (exponential backoff). A 429 `Retry-After` can lengthen it. */
   DELIVERY_RETRY_BASE_SECONDS: z.coerce.number().int().positive().default(30),
 });

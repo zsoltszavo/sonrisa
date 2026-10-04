@@ -9,8 +9,9 @@ export default defineConfig({
       INGESTION_SCHEDULER: 'off',
       // Its own port, so a Stand-in from docker compose (4010) can keep running beside the tests.
       SLACK_STANDIN_URL: 'http://localhost:4011',
-      // The local webhook receiver `webhook.e2e-spec.ts` starts (exempt from the public-only rule).
-      WEBHOOK_ALLOWED_ORIGINS: 'http://localhost:4012',
+      // The webhook receiver `webhook.e2e-spec.ts` starts (exempt from the public-only rule); not
+      // 4012, the dev receiver's port (.env.example), so both can run at once (CR71).
+      WEBHOOK_ALLOWED_ORIGINS: 'http://localhost:4013',
       // Fast retries: 1 s, then 2 s.
       DELIVERY_RETRY_BASE_SECONDS: '1',
     },

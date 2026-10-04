@@ -1,4 +1,9 @@
-import { createServer, type IncomingHttpHeaders, type Server } from 'node:http';
+import {
+  createServer,
+  type IncomingHttpHeaders,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import { once } from 'node:events';
 import { ConfigService } from '@nestjs/config';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -8,6 +13,8 @@ import { DeliveryError, type DeliveryMessage } from './channel-provider.js';
 import {
   BlockedAddressError,
   checkedLookup,
+  deliveryErrorFor,
+  deliveryErrorForTransport,
   isBlockedAddress,
   postJson,
   renderWebhookPayload,
@@ -343,5 +350,75 @@ describe('WebhookChannel.send', () => {
     );
     await expect(viaLookup).rejects.toBeInstanceOf(BlockedAddressError);
     expect(requests).toHaveLength(0);
+  });
+});
+
+describe('postJson (review CR70, CR78)', () => {
+  let server: Server;
+  let url: string;
+  let respond: (res: ServerResponse) => void;
+
+  beforeAll(async () => {
+    server = createServer((req, res) => {
+      req.resume();
+      req.on('end', () => {
+        respond(res);
+      });
+    });
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    url = `http://127.0.0.1:${portOf(server)}/`;
+  });
+
+  afterAll(() => {
+    server.closeAllConnections();
+    server.close();
+  });
+
+  const post = (signal = new AbortController().signal) =>
+    postJson(url, '{}', {}, { lookup: undefined, signal });
+
+  it('keeps the status when an error body stalls until the timeout', async () => {
+    respond = (res) => {
+      res.writeHead(404);
+      res.write('no such ');
+    };
+    await expect(post(AbortSignal.timeout(300))).resolves.toMatchObject({ status: 404 });
+  });
+
+  it('keeps at most 1 KiB of an error body, even from one large chunk', async () => {
+    respond = (res) => {
+      res.writeHead(500).end('x'.repeat(100_000));
+    };
+    const response = await post();
+    expect(response.status).toBe(500);
+    expect(response.body.length).toBe(1024);
+  });
+});
+
+describe('deliveryErrorFor / deliveryErrorForTransport', () => {
+  const now = new Date('2026-10-04T12:00:00Z');
+
+  it('honours Retry-After on any retryable answer, not only 429 (CR73)', () => {
+    expect(deliveryErrorFor({ status: 503, retryAfter: '120', body: '' }, now)).toMatchObject({
+      retryable: true,
+      retryAfterSeconds: 120,
+    });
+    expect(deliveryErrorFor({ status: 404, retryAfter: '120', body: '' }, now)).toMatchObject({
+      retryable: false,
+      retryAfterSeconds: null,
+    });
+  });
+
+  const withCode = (code: string) =>
+    Object.assign(new Error(`getaddrinfo ${code} x.example`), { code });
+
+  it.each([
+    ['a blocked address', new BlockedAddressError('x.example', '10.0.0.1'), false],
+    ['a host that does not exist (CR74)', withCode('ENOTFOUND'), false],
+    ['a resolver that is down for now', withCode('EAI_AGAIN'), true],
+    ['a refused connection', withCode('ECONNREFUSED'), true],
+  ])('maps %s', (_what, error, retryable) => {
+    expect(deliveryErrorForTransport(error)).toMatchObject({ retryable });
   });
 });

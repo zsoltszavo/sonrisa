@@ -11,6 +11,7 @@ import {
   severityText,
   sourceName,
   TEST_TEXT,
+  truncate,
   utcText,
   whyText,
 } from './message.js';
@@ -46,9 +47,6 @@ export function webhookUrlProblem(url: string, standinOrigin: string): string | 
 /** Slack's mrkdwn control characters (formatting docs): &, <, > must be escaped. */
 export const escapeMrkdwn = (text: string): string =>
   text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-
-const truncate = (text: string, max: number): string =>
-  text.length <= max ? text : `${text.slice(0, max - 1)}…`;
 
 /**
  * Escapes, then fits Slack's limit (review CR45): cutting the raw text keeps entities whole, and

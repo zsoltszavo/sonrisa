@@ -45,5 +45,9 @@ export function whyText(message: NotificationMessage): string {
   return `You get this because ${rules} matched (destination "${message.destinationLabel}").`;
 }
 
+/** Cuts to `max` characters, marking the cut with an ellipsis. */
+export const truncate = (text: string, max: number): string =>
+  text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+
 export const TEST_TEXT =
   'This is a test from World Event Alerts. If you can read it, this Channel Destination works.';

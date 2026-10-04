@@ -26,7 +26,7 @@ import { startWebhookReceiver, type WebhookReceiver } from './webhook-receiver.j
  * `WEBHOOK_ALLOWED_ORIGINS` exempts (vitest.config.e2e.ts). Everything carries RUN.
  */
 const RUN = `s8${randomUUID().slice(0, 8)}`;
-const RECEIVER_URL = 'http://localhost:4012';
+const RECEIVER_URL = 'http://localhost:4013';
 
 let app: TestApp;
 let prisma: PrismaService;
@@ -151,7 +151,7 @@ describe('Webhook channel', () => {
     'https://169.254.169.254/latest/meta-data',
     'https://localhost/hook',
     'https://[::1]/hook',
-    'http://localhost:4013/hook',
+    'http://localhost:4012/hook',
   ])('refuses %s on save', async (webhookUrl) => {
     const user = await registerUser(app, 'ssrf');
     const response = await api()

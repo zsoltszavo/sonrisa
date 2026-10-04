@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { errorMessage } from '../common/error-message.js';
 import type { Env } from '../config/env.js';
 import { type ChannelProvider, DeliveryError, type DeliveryMessage } from './channel-provider.js';
-import { headline, TEST_TEXT } from './message.js';
+import { headline, TEST_TEXT, truncate } from './message.js';
 import { parseRetryAfter } from './slack.channel.js';
 
 const SEND_TIMEOUT_MS = 15_000;
@@ -34,7 +34,10 @@ for (const [network, prefix] of [
   ['192.0.0.0', 24],
   ['192.0.2.0', 24],
   ['192.88.99.0', 24],
+  ['192.31.196.0', 24], // AS112
+  ['192.52.193.0', 24], // AMT
   ['192.168.0.0', 16],
+  ['192.175.48.0', 24], // AS112 direct delegation
   ['198.18.0.0', 15],
   ['198.51.100.0', 24],
   ['203.0.113.0', 24],
@@ -51,6 +54,9 @@ for (const [network, prefix] of [
   ['2001::', 23], // IETF protocol assignments, incl. Teredo
   ['2001:db8::', 32], // documentation
   ['2002::', 16], // 6to4
+  ['2620:4f:8000::', 48], // AS112
+  ['3fff::', 20], // documentation (RFC 9637)
+  ['5f00::', 16], // SRv6 SIDs
   ['fc00::', 7], // unique local
   ['fe80::', 10], // link-local
   ['ff00::', 8], // multicast
@@ -148,6 +154,9 @@ export function postJson(
 ): Promise<WebhookResponse> {
   const { request } = new URL(url).protocol === 'https:' ? https : http;
   return new Promise((resolve, reject) => {
+    // Set once the status line is in. From then on the status decides the outcome: an error body
+    // that stalls until the timeout or breaks off only loses detail (review CR70).
+    let answered: (() => void) | undefined;
     const req = request(
       url,
       {
@@ -159,30 +168,36 @@ export function postJson(
       (res) => {
         const status = res.statusCode ?? 0;
         const retryAfter = res.headers['retry-after'] ?? null;
-        if (status >= 200 && status < 300) {
-          res.resume();
-          resolve({ status, retryAfter, body: '' });
-          return;
-        }
         const chunks: Buffer[] = [];
         let size = 0;
-        const done = () => {
+        answered = () => {
           resolve({ status, retryAfter, body: Buffer.concat(chunks).toString('utf8') });
         };
+        if (status >= 200 && status < 300) {
+          res.resume();
+          answered();
+          return;
+        }
         res.on('data', (chunk: Buffer) => {
-          chunks.push(chunk);
-          size += chunk.length;
+          // Only what fits is kept, so one large chunk can't hold more than the cap (CR78).
+          const kept = chunk.subarray(0, MAX_ERROR_BODY_BYTES - size);
+          chunks.push(kept);
+          size += kept.length;
           if (size >= MAX_ERROR_BODY_BYTES) {
+            answered?.();
             res.destroy();
-            done();
           }
         });
-        res.on('end', done);
-        // A body cut short only loses detail; the status alone decides what happens next.
-        res.on('error', done);
+        res.on('end', answered);
+        res.on('error', answered);
+        res.on('close', answered);
       },
     );
-    req.on('error', reject);
+    // A Promise settles once, so the later calls of `answered` (end, then close) are no-ops.
+    req.on('error', (error) => {
+      if (answered) answered();
+      else reject(error);
+    });
     req.end(body);
   });
 }
@@ -222,23 +237,37 @@ export function renderWebhookPayload(message: DeliveryMessage) {
   };
 }
 
-const oneLine = (text: string): string => {
-  const flat = text.replace(/\s+/g, ' ').trim();
-  return flat.length <= 200 ? flat : `${flat.slice(0, 199)}…`;
-};
+const oneLine = (text: string): string => truncate(text.replace(/\s+/g, ' ').trim(), 200);
 
-/** D21(b) for a generic receiver: 408/429/5xx can pass on a later attempt, every other answer won't. */
+/**
+ * D21(b) for a generic receiver: 408/429/5xx can pass on a later attempt, every other answer
+ * won't. Any retryable answer may carry `Retry-After` (a 503 during maintenance, CR73).
+ */
 export function deliveryErrorFor(response: WebhookResponse, now: Date): DeliveryError {
   const { status } = response;
   const body = oneLine(response.body);
   const reason = `Webhook answered ${String(status)}${body ? ` ${body}` : ''}`;
-  if (status === 429) {
-    return new DeliveryError(reason, true, parseRetryAfter(response.retryAfter, now));
-  }
   if (status >= 300 && status < 400) {
     return new DeliveryError(`${reason} (redirects are not followed)`, false);
   }
-  return new DeliveryError(reason, status === 408 || status >= 500);
+  const retryable = status === 408 || status === 429 || status >= 500;
+  return retryable
+    ? new DeliveryError(reason, true, parseRetryAfter(response.retryAfter, now))
+    : new DeliveryError(reason, false);
+}
+
+/**
+ * A request that got no answer. A blocked address or a name that doesn't exist (`ENOTFOUND`, a
+ * typo in the host, CR74) won't change by retrying; a refused connection, a timeout or a resolver
+ * that is down for now (`EAI_AGAIN`) can.
+ */
+export function deliveryErrorForTransport(error: unknown): DeliveryError {
+  if (error instanceof BlockedAddressError) return new DeliveryError(error.message, false);
+  const code = error instanceof Error && 'code' in error ? error.code : undefined;
+  if (code === 'ENOTFOUND') {
+    return new DeliveryError(`Webhook host not found: ${errorMessage(error)}`, false);
+  }
+  return new DeliveryError(`Webhook unreachable: ${errorMessage(error)}`, true);
 }
 
 /** Any HTTPS endpoint that accepts a JSON POST (D11's extensibility proof, D24). */
@@ -263,7 +292,6 @@ export class WebhookChannel implements ChannelProvider<{ webhookUrl: string }> {
           title: 'Endpoint URL',
           description:
             'An https:// address on the public internet. Each alert is POSTed to it as JSON.',
-          format: 'uri',
         }),
     });
   }
@@ -294,8 +322,7 @@ export class WebhookChannel implements ChannelProvider<{ webhookUrl: string }> {
       );
     } catch (error) {
       if (signal.aborted) throw error;
-      if (error instanceof BlockedAddressError) throw new DeliveryError(error.message, false);
-      throw new DeliveryError(`Webhook unreachable: ${errorMessage(error)}`, true);
+      throw deliveryErrorForTransport(error);
     }
     if (response.status >= 200 && response.status < 300) return;
     throw deliveryErrorFor(response, new Date());

@@ -1,4 +1,10 @@
 import {
+  type AdminEvent,
+  type AdminEventDetail,
+  adminEventDetailSchema,
+  adminEventSchema,
+  type AdminNotification,
+  adminNotificationSchema,
   type AlertRule,
   type AlertRuleInput,
   alertRuleSchema,
@@ -10,10 +16,18 @@ import {
   channelDestinationBaseSchema,
   type ChannelInfo,
   channelInfoSchema,
+  type EventSource,
+  type EventSourceKey,
+  eventSourceSchema,
+  type EventSourceUpdate,
   healthResponseSchema,
   type HealthResponse,
   type MyNotification,
   myNotificationSchema,
+  type NotificationStatus,
+  type PollResult,
+  pollResultSchema,
+  type SimulatedEventInput,
   type StoredEvent,
   storedEventSchema,
   type TestDeliveryResult,
@@ -73,7 +87,7 @@ async function errorFrom(response: Response): Promise<ApiError> {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
 }
 
@@ -131,6 +145,26 @@ export async function fetchHealth(): Promise<HealthResponse> {
   return healthResponseSchema.parse(await response.json());
 }
 
+/** Explorer filters as the URL and the API take them; `from`/`to` are ISO 8601 with an offset. */
+export interface AdminEventFilters {
+  source?: EventSourceKey;
+  category?: Category;
+  minSeverity?: number;
+  from?: string;
+  to?: string;
+  limit?: number;
+}
+
+/** `?a=1&b=2` from the defined values only; empty when there are none. */
+export function queryString(params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') search.set(key, String(value));
+  }
+  const text = search.toString();
+  return text ? `?${text}` : '';
+}
+
 /** Ids are encoded: route params are decoded, so a crafted link could otherwise reach another path. */
 export const api = {
   login: (email: string, password: string): Promise<AuthResponse> =>
@@ -172,4 +206,33 @@ export const api = {
     request(`/events/recent?category=${category}`, z.array(storedEventSchema)),
   myNotifications: (): Promise<MyNotification[]> =>
     request('/me/notifications', z.array(myNotificationSchema)),
+
+  admin: {
+    eventSources: (): Promise<EventSource[]> =>
+      request('/admin/event-sources', z.array(eventSourceSchema)),
+    updateEventSource: (key: EventSourceKey, update: EventSourceUpdate): Promise<EventSource> =>
+      request(`/admin/event-sources/${encodeURIComponent(key)}`, eventSourceSchema, {
+        method: 'PATCH',
+        body: update,
+      }),
+    pollNow: (key: EventSourceKey): Promise<PollResult> =>
+      request(`/admin/event-sources/${encodeURIComponent(key)}/poll`, pollResultSchema, {
+        method: 'POST',
+      }),
+    saveSimulatedEvent: (input: SimulatedEventInput, id?: string): Promise<StoredEvent> =>
+      id
+        ? request(`/admin/simulated-events/${encodeURIComponent(id)}`, storedEventSchema, {
+            method: 'PUT',
+            body: input,
+          })
+        : request('/admin/simulated-events', storedEventSchema, { method: 'POST', body: input }),
+    events: (filters: AdminEventFilters): Promise<AdminEvent[]> =>
+      request(`/admin/events${queryString({ ...filters })}`, z.array(adminEventSchema)),
+    event: (id: string): Promise<AdminEventDetail> =>
+      request(`/admin/events/${encodeURIComponent(id)}`, adminEventDetailSchema),
+    notifications: (status?: NotificationStatus): Promise<AdminNotification[]> =>
+      request(`/admin/notifications${queryString({ status })}`, z.array(adminNotificationSchema)),
+    retryNotification: (id: string): Promise<void> =>
+      requestNoContent(`/admin/notifications/${encodeURIComponent(id)}/retry`, { method: 'POST' }),
+  },
 };

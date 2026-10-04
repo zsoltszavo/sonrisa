@@ -13,6 +13,12 @@ export type Severity = z.infer<typeof severitySchema>;
 export const eventSourceKeySchema = z.enum(['usgs', 'gdacs', 'simulated']);
 export type EventSourceKey = z.infer<typeof eventSourceKeySchema>;
 
+/** A Date, or an ISO 8601 string with an offset (JSON). Not `z.coerce`, which turns `null` into 1970. */
+export const dateSchema = z.union([
+  z.date(),
+  z.iso.datetime({ offset: true }).transform((s) => new Date(s)),
+]);
+
 export const eventSchema = z.object({
   source: eventSourceKeySchema,
   externalId: z.string().min(1),
@@ -24,8 +30,7 @@ export const eventSchema = z.object({
   location: z.string(),
   /** http(s) only: the link is rendered in the UI, emails and Slack, so `javascript:` must not pass. */
   url: z.url({ protocol: /^https?$/ }).nullable(),
-  /** A Date, or an ISO 8601 string with an offset (JSON). Not `z.coerce`, which turns `null` into 1970. */
-  occurredAt: z.union([z.date(), z.iso.datetime({ offset: true }).transform((s) => new Date(s))]),
+  occurredAt: dateSchema,
 });
 export type Event = z.infer<typeof eventSchema>;
 

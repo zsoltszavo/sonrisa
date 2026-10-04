@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { z } from 'zod';
 import { useCurrentUser } from '@/lib/auth';
-import { Loading } from './States';
+import { ErrorState, Loading } from './States';
 
 /**
  * Sends signed-out visitors to /login and remembers where they were going. This is UX only:
@@ -35,4 +35,24 @@ export function RedirectIfSignedIn() {
   const to =
     state.success && !state.data.from.startsWith('//') ? state.data.from : '/notifications';
   return <Navigate to={to} replace />;
+}
+
+/**
+ * Keeps the Admin area to admins. UX only: every /api/admin route answers 403 to anyone else,
+ * whatever the browser shows (AI-shortcut checklist).
+ */
+export function RequireAdmin() {
+  const { data: user, isPending, isError, error, refetch } = useCurrentUser();
+  if (isPending) return <Loading label="Checking your access…" />;
+  if (isError) {
+    return (
+      <ErrorState
+        title="We couldn't check your access"
+        error={error}
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+  if (user.role !== 'admin') return <Navigate to="/notifications" replace />;
+  return <Outlet />;
 }

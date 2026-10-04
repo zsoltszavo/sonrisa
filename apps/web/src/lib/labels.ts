@@ -1,4 +1,10 @@
-import { type Category, SEVERITY_LABELS, type Severity } from '@sonrisa/shared';
+import {
+  type Category,
+  type EventSourceKey,
+  type NotificationStatus,
+  SEVERITY_LABELS,
+  type Severity,
+} from '@sonrisa/shared';
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   earthquake: 'Earthquakes',
@@ -6,6 +12,27 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   news: 'News',
   market: 'Markets',
 };
+
+export const SOURCE_LABELS: Record<EventSourceKey, string> = {
+  usgs: 'USGS',
+  gdacs: 'GDACS',
+  simulated: 'Simulated',
+};
+
+/** The admin log's words for a Notification's status (CONTEXT.md: pending → sent | failed). */
+export const STATUS_LABELS: Record<NotificationStatus, string> = {
+  pending: 'Pending',
+  sent: 'Sent',
+  failed: 'Failed',
+};
+
+/** "90 s", "5 min", "2 h": polling intervals as an admin thinks of them. */
+export function formatSeconds(seconds: number): string {
+  if (seconds < 60 || seconds % 60 !== 0) return `${String(seconds)} s`;
+  const minutes = seconds / 60;
+  if (minutes < 60 || minutes % 60 !== 0) return `${String(minutes)} min`;
+  return `${String(minutes / 60)} h`;
+}
 
 export const severityText = (severity: Severity) =>
   `${String(severity)} · ${SEVERITY_LABELS[severity]}`;

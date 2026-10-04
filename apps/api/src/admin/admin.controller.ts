@@ -1,5 +1,12 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
+  type AdminEvent,
+  type AdminEventDetail,
+  type AdminEventsQuery,
+  adminEventsQuerySchema,
+  type AdminNotification,
+  type AdminNotificationsQuery,
+  adminNotificationsQuerySchema,
   type EventSource,
   type EventSourceKey,
   eventSourceKeySchema,
@@ -61,6 +68,25 @@ export class AdminController {
     @Body(simulatedEventPipe) input: SimulatedEventInput,
   ): Promise<StoredEvent> {
     return this.simulated.update(id, input);
+  }
+
+  @Get('events')
+  events(
+    @Query(new ZodValidationPipe(adminEventsQuerySchema)) query: AdminEventsQuery,
+  ): Promise<AdminEvent[]> {
+    return this.admin.events(query);
+  }
+
+  @Get('events/:id')
+  event(@Param('id') id: string): Promise<AdminEventDetail> {
+    return this.admin.event(id);
+  }
+
+  @Get('notifications')
+  notifications(
+    @Query(new ZodValidationPipe(adminNotificationsQuerySchema)) query: AdminNotificationsQuery,
+  ): Promise<AdminNotification[]> {
+    return this.admin.notifications(query);
   }
 
   /** Queues a `failed` Notification again with a fresh set of attempts; 409 for any other status. */

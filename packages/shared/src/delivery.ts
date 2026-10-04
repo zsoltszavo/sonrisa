@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { channelKeySchema, type Severity } from './event.js';
 
+/** Sends per Notification, counting the first (D11, D21(a)); the admin log shows "attempt n of 3". */
+export const MAX_DELIVERY_ATTEMPTS = 3;
+
 /** Words shown next to the number in emails, Slack messages and the UI. */
 export const SEVERITY_LABELS: Record<Severity, string> = {
   1: 'Minor',

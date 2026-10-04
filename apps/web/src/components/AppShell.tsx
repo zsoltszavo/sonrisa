@@ -12,6 +12,8 @@ const NAV = [
   { to: '/rules', label: 'Alert rules', short: 'Rules' },
   { to: '/destinations', label: 'Destinations', short: 'Destinations' },
 ];
+/** Shown to admins only; the server enforces the role on every /api/admin call. */
+const ADMIN_NAV = { to: '/admin', label: 'Admin', short: 'Admin' };
 
 /**
  * Layout after sign-in. The header copies sonrisa.hu's: a mist bar, the lockup on the left with
@@ -20,6 +22,7 @@ const NAV = [
 export function AppShell() {
   const { data: user } = useCurrentUser();
   const signOut = useSignOut();
+  const nav = user?.role === 'admin' ? [...NAV, ADMIN_NAV] : NAV;
   return (
     <div className="flex min-h-svh flex-col">
       <a
@@ -38,7 +41,7 @@ export function AppShell() {
             className="order-last -mx-[15px] w-[calc(100%+30px)] overflow-x-auto md:order-none md:mx-0 md:w-auto"
           >
             <ul className="flex gap-1 px-[15px] md:px-0">
-              {NAV.map(({ to, label, short }) => (
+              {nav.map(({ to, label, short }) => (
                 <li key={to}>
                   <NavLink
                     to={to}

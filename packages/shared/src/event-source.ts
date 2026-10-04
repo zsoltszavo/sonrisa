@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eventSchema, eventSourceKeySchema } from './event.js';
+import { dateSchema, eventSchema, eventSourceKeySchema } from './event.js';
 
 /** Shortest polling interval an admin may set: the feeds refresh about once a minute (D5). */
 export const MIN_POLL_INTERVAL_SEC = 30;
@@ -19,9 +19,7 @@ export const eventSourceSchema = z.object({
   /** Null for a source that is never polled (the Simulated Source). */
   intervalSec: z.number().int().nullable(),
   freshnessHours: z.number().int(),
-  lastPollAt: z
-    .union([z.date(), z.iso.datetime({ offset: true }).transform((s) => new Date(s))])
-    .nullable(),
+  lastPollAt: dateSchema.nullable(),
   lastError: z.string().nullable(),
 });
 export type EventSource = z.infer<typeof eventSourceSchema>;

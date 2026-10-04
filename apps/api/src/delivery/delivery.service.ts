@@ -6,7 +6,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { type Severity, severitySchema } from '@sonrisa/shared';
+import { MAX_DELIVERY_ATTEMPTS, type Severity, severitySchema } from '@sonrisa/shared';
 import { errorMessage } from '../common/error-message.js';
 import { DeliveryError, type DeliveryMessage } from '../channels/channel-provider.js';
 import { ChannelRegistry } from '../channels/channel-registry.js';
@@ -16,8 +16,7 @@ import { isPrismaError } from '../common/prisma-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DeliveryQueue } from './delivery-queue.js';
 
-/** Sends per Notification, counting the first (D11). */
-export const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = MAX_DELIVERY_ATTEMPTS;
 /** Upper bound for one wait, whatever the backoff or a receiver's Retry-After asks for. */
 export const MAX_RETRY_DELAY_SECONDS = 3600;
 

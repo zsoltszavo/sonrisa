@@ -66,6 +66,8 @@ gates exit=0
 
 (e2e run against a freshly migrated and seeded database, `DATABASE_URL=…/sonrisa_s5check`, with the docker Mailpit.)
 
+CI on GitHub: ✅ green on the first push of `69f4a38` (incl. the new Mailpit service, `db:migrate` and e2e with the spawned Stand-in), https://github.com/zsoltszavo/sonrisa/actions/runs/37219504406
+
 ## Notes for later sessions
 
 - **Your local `.env`:** add `SLACK_STANDIN_URL=http://localhost:4010` (now in `.env.example`). Without it only real Slack URLs are allowed, so the seeded `sonrisa · #world-alerts` destination fails with "Destination config is not valid". Run `docker compose up -d --build` once to start the Stand-in. The S3 note's `prisma migrate reset` is still pending for the dev database.

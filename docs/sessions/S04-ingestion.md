@@ -64,6 +64,8 @@ gates exit=0
 
 (e2e run against a freshly migrated database, `DATABASE_URL=…/sonrisa_s4check`.)
 
+CI on GitHub: ✅ green on the first push of `129c2ea` (incl. `db:migrate` + e2e against the Postgres service), https://github.com/zsoltszavo/sonrisa/actions/runs/37217033666
+
 ## Notes for later sessions
 
 - **Local dev DB:** run `pnpm --filter @sonrisa/api exec prisma migrate reset --force` once (S3 note, still pending). Set `INGESTION_SCHEDULER=off` in `.env` if you don't want the dev API calling the real feeds.

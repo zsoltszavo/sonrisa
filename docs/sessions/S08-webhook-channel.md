@@ -36,7 +36,7 @@ Provider commit `9b55c21` "Add Webhook channel (extensibility proof)":
 **Production code outside the new provider: one line in `ChannelRegistry`'s constructor and one in `ChannelsModule`.** The pipeline (`delivery/`), `packages/shared` and `apps/web` were not touched. The rest is config (the new env var, needed because a user-chosen URL needs a dev/e2e exemption Slack never needed), tests (`waitFor` moved to `support.ts`; the `GET /channels` assertion now lists three Channels) and the decision log.
 
 **Leaks found and how they were handled:**
-1. **The Name placeholder branched on `'slack'`** (CR72, also visible in screenshot 01's code path): a Webhook got "My work email". Fixed in its own commit `2e07d05`, with the copy that listed "email or Slack" reworded as examples. This was the only place the web app branched on a Channel key.
+1. **The Name placeholder branched on `'slack'`** (CR72): a Webhook got "My work email". Fixed in its own commit `2e07d05`, with the copy that listed "email or Slack" reworded as examples. This was the only place the web app branched on a Channel key.
 2. **The destination list summary is keyed by field name**: `describeConfig` shows the host of any `webhookUrl` field. The Webhook reuses that name (D24(a)) instead of changing the web app. This is a convention the abstraction relies on, not a leak that needed fixing. A Channel with a differently named URL field would get an empty summary, never its full (possibly secret) URL.
 3. **Icon:** the Webhook gets the destination list's fallback icon (a paper plane, screenshot 03). Acceptable as is.
 4. The admin Notification log needed nothing: the Channel is a plain string (as S7 predicted).
@@ -109,4 +109,4 @@ $ pnpm test:e2e (DATABASE_URL=…/sonrisa_s6)
 
 ## CI
 
-_(recorded after the push)_
+Commit `4aa34f3` (with `9b55c21`, `f590fe0`, `2e07d05`): GitHub Actions run [37225246843](https://github.com/zsoltszavo/sonrisa/actions/runs/37225246843), job "typecheck · lint · test · build": **success**.
